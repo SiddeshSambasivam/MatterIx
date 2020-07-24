@@ -5,7 +5,9 @@ from registry import register_activation
 
 @register_activation
 def sigmoid(x):
-    return 1/(1+np.exp(-x))
+    print('x innner', 1/(1+np.exp(-x)))
+    out = 1/(1+np.exp(-x))
+    return out
 
 @register_activation
 def tanh(x):
@@ -24,6 +26,10 @@ def lrelu(x, slope=0.01):
     y1 = (x>=0) * x
     y2 = (x<0)*slope*x
     return y1+y2
+
+@register_activation
+def add(x,y):
+    return x+y
 
 if __name__ == "__main__":
     x = np.array([-1,2,3,10])
