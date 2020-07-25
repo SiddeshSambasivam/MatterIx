@@ -6,10 +6,16 @@ np.random.seed(0)
 
 class Dense:
 
-    def __init__(self, number_neurons, activation, prevLayerdim=2):
+    def __init__(self, number_neurons,activation, prevLayerdim=2, output_dim=None):
         self.wl = self.initialzeWeights(number_neurons)
         self.b = np.random.randn(number_neurons,1)
         self.units = number_neurons
+        self.input_dim = number_neurons
+        if output_dim != None:
+            self.output_dim = output_dim
+        else:
+            self.output_dim = number_neurons
+
         self.out = None
 
         if activation not in ACTIVATION_REGISTRY:
@@ -23,7 +29,7 @@ class Dense:
         return self.units
 
     def initialzeWeights(self, number_neurons, prevLayerdim=2):
-        return np.random.randn(number_neurons,1) * np.sqrt(2/prevLayerdim) 
+        return np.random.randn(self.input_dim,self.output_dim) * np.sqrt(2/prevLayerdim) 
     
     def call(self, x):
         try:
