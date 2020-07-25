@@ -11,7 +11,7 @@ def register_activation(fn):
         raise ValueError(err_msg.format(fn.__name__))
 
     ACTIVATION_REGISTRY[fn.__name__] = fn
-
+    
     return fn
 
 
