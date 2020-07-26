@@ -1,3 +1,3 @@
 # MatterIx
 
-!! Project under developments !!
+!! Project under development !!

@@ -1,2 +1,3 @@
 dev
-__pycache__
+modules/__pycache__
+.gitignore

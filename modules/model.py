@@ -14,9 +14,11 @@ class Model:
     def __init__(self, *layers):
         self.layers = layers
 
-    def fit(inputs, targets, verbose=False):
+    def fit(self, inputs, targets, verbose=False):
         '''Gets the input and then  does forward prop and then backward'''
         assert inputs.shape[0] == targets.shape[0]
+        for layer in self.layers:
+            layer
 
                 
 
