@@ -6,17 +6,17 @@ np.random.seed(0)
 
 class Dense:
 
-    def __init__(self, number_neurons,activation, prevLayerdim=2, output_dim=None):
+    def __init__(self, input_dim,activation, prevLayerdim=2, output_dim=None):
         
-        self.input_dim = number_neurons
+        self.input_dim = input_dim
         
         if output_dim != None:
             self.output_dim = output_dim
         else:
-            self.output_dim = number_neurons
+            self.output_dim = input_dim
         
-        self.wl = self.initialzeWeights(number_neurons)
-        self.b = np.random.randn(number_neurons,1)
+        self.wl = self.initialzeWeights(input_dim)
+        self.b = np.random.randn(self.output_dim)
 
         self.out = None
 
@@ -38,23 +38,23 @@ class Dense:
         except:
             raise Exception 
         
-        z1 = np.dot(x.T, self.wl) 
+        z1 = x.T @ self.wl + self.b
         
-        print("shalpe:",self.b.shape)
-        print("shalpe:",z1.shape)
+        print("shape:",self.b.shape)
+        print("shape:",z1.shape)
         self.out = self.activation(z1)
         print(self.out.shape)
-        return self.out 
+        return self.out
     
     def get_layer(self):
         return self.out
 
 
 if __name__ == "__main__":
-    l1 = Dense(number_neurons=3, activation='sigmoid')
+    l1 = Dense(input_dim=3, output_dim =10,activation='sigmoid')
     x = np.array([2,3,10],)
-    print(l1.call(x))
-    # print(l1.get_layer())
+    l1.call(x)
+    print(l1.get_layer())
     
 
 
