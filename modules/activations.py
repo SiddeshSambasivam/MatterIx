@@ -1,7 +1,7 @@
 import numpy as np
 import typing
 import math
-from registry import register_activation
+from .registry import register_activation
 
 @register_activation
 def sigmoid(x):

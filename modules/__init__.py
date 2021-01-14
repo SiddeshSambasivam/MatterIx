@@ -1,5 +1,8 @@
-from activations import *
-from registry import ACTIVATION_REGISTRY
+# print(dir(urllib))
+# help(urllib.urlopen)
 
-__all__ = ["ACTIVATION_REGISTRY"]
+from .activations import *
+from .registry import ACTIVATION_REGISTRY
 
+__all__ = ['registry', 'activations', 'layers']
+print(__name__)
