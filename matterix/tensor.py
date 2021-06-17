@@ -4,7 +4,7 @@ import numpy as np
 # TODO
 # 1. Check instance of the variable before any basic operations of a tensor
 # 2. Backward propogation to the operations
-# 3. Write unit tests for
+# 3. Write unit tests for operations
 
 
 class Tensor:
