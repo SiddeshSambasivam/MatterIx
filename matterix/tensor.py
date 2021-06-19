@@ -73,22 +73,33 @@ class Tensor:
         return self.data.shape
 
     def backward(self) -> None:
-        def grad_fn(t, grad):
+        def grad_fn(t: Tensor, grad: Tensor):
 
             for (child, local_gradient) in t.children:
 
                 if child.grad is None:
                     child.grad = Tensor(np.zeros_like(child.data))
 
-                if local_gradient.data.ndim < grad.data.ndim:
-                    print("Tackle broadcasting problem")
-                    print(child, local_gradient, grad)
-                    # print()
-                    for _ in range(local_gradient.data.ndim - grad.data.ndim):
-                        grad = grad.sum(axis=0)
-                        print(grad)
-                    print()
-                _gradient = local_gradient * grad
+                _gradient: Tensor = local_gradient * grad
+
+                # After a day of trying to solve this problem, I finally found this genius figuring out the same problem. Thank you Joel Grus
+                # Reference: https://youtu.be/DVKaLdblCIw
+                if child.grad.data.ndim < _gradient.data.ndim:
+                    drop_dim: int = _gradient.data.ndim - child.grad.data.ndim
+                    print(f"Number of dim to drop= {drop_dim}")
+
+                    for _ in range(drop_dim):
+
+                        _gradient.data = _gradient.data.sum(axis=0)
+
+                for i, dim in enumerate(child.data.shape):
+                    if dim == 1:
+                        _gradient.data = _gradient.data.sum(axis=i, keepdims=True)
+
+                assert (
+                    child.shape == _gradient.shape
+                ), f"Broadcasted tensor {_gradient} cannot be added to the gradient {child.grad}"
+
                 child.grad += _gradient
 
                 grad_fn(child, _gradient)
