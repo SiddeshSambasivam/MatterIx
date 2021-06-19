@@ -80,6 +80,14 @@ class Tensor:
                 if child.grad is None:
                     child.grad = Tensor(np.zeros_like(child.data))
 
+                if local_gradient.data.ndim < grad.data.ndim:
+                    print("Tackle broadcasting problem")
+                    print(child, local_gradient, grad)
+                    # print()
+                    for _ in range(local_gradient.data.ndim - grad.data.ndim):
+                        grad = grad.sum(axis=0)
+                        print(grad)
+                    print()
                 _gradient = local_gradient * grad
                 child.grad += _gradient
 

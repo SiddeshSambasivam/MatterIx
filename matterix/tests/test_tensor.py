@@ -82,7 +82,9 @@ class TestTensor(unittest.TestCase):
         dt.retain_grad()
 
         dt.backward(gradient=torch.ones_like(dt))
-
+        print()
+        print(b.grad, bt.grad)
+        print()
         assert np.array_equal(at.grad.numpy(), a.grad.data) == True
         assert np.array_equal(bt.grad.numpy(), b.grad.data) == True
         assert np.array_equal(ct.grad.numpy(), c.grad.data) == True
