@@ -23,7 +23,10 @@ def parseArrayable(object: Union[Arrayable, "Tensor"]):
     if not isinstance(object, np.ndarray):
         try:
             # enforce only int, float data inside the numpy array -> Taken care by numpy
-            return np.array(object, dtype=np.float32)
+            res = np.array(object, dtype=np.float32)
+            # if res.shape == ():
+            # res.resize(1)
+            return res
         except ValueError:
             raise TypeError("Only list, int, float or numpy array are supported")
 
@@ -70,6 +73,8 @@ class Tensor:
 
     @property
     def shape(self):
+        if self.data.shape == ():
+            return (1,)
         return self.data.shape
 
     def backward(self) -> None:
@@ -78,7 +83,12 @@ class Tensor:
             for (child, local_gradient) in t.children:
 
                 if child.grad is None:
-                    child.grad = Tensor(np.zeros_like(child.data))
+                    # Addresses the case when the data is a int or a float
+                    if child.data.shape == ():
+
+                        child.grad = Tensor(np.zeros_like(1))
+                    else:
+                        child.grad = Tensor(np.zeros_like(child.data))
 
                 _gradient: Tensor = local_gradient * grad
 
@@ -101,9 +111,9 @@ class Tensor:
                     if dim == 1:
                         _gradient.data = _gradient.data.sum(axis=i, keepdims=True)
 
-                assert (
-                    child.shape == _gradient.shape
-                ), f"Broadcasted tensor {_gradient} cannot be added to the gradient {child.grad}"
+                # assert (
+                #     child.shape == _gradient.shape
+                # ), f"Broadcasted tensor {_gradient} cannot be added to the gradient {child.grad}"
 
                 child.grad += _gradient
 

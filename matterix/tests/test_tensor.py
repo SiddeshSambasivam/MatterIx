@@ -82,9 +82,34 @@ class TestTensor(unittest.TestCase):
         dt.retain_grad()
 
         dt.backward(gradient=torch.ones_like(dt))
-        print()
-        print(b.grad, bt.grad)
-        print()
+
+        assert np.array_equal(at.grad.numpy(), a.grad.data) == True
+        assert np.array_equal(bt.grad.numpy(), b.grad.data) == True
+        assert np.array_equal(ct.grad.numpy(), c.grad.data) == True
+        assert np.array_equal(dt.grad.numpy(), d.grad.data) == True
+
+        a = Tensor([[1, 2, 3], [1, 2, 3]])
+
+        b = Tensor(1)
+
+        c = a + b
+        d = c * a
+
+        d.backward()
+
+        at = torch.tensor(
+            [[1, 2, 3], [1, 2, 3]], dtype=torch.float32, requires_grad=True
+        )
+        bt = torch.tensor(1, dtype=torch.float32, requires_grad=True)
+        ct = at + bt
+        ct.retain_grad()
+        dt = ct * at
+        dt.retain_grad()
+
+        dt.backward(gradient=torch.ones_like(dt))
+        # print()
+        # print(bt.grad, b.grad)
+        # print()
         assert np.array_equal(at.grad.numpy(), a.grad.data) == True
         assert np.array_equal(bt.grad.numpy(), b.grad.data) == True
         assert np.array_equal(ct.grad.numpy(), c.grad.data) == True
