@@ -1,97 +1,80 @@
 from typing import List, Union, NamedTuple
 import numpy as np
 
-# TODO
-# 1. Check instance of the variable before any basic operations of a tensor
-# 2. Backward propogation to the operations
-# 3. Write unit tests for operations
+# Reference: https://pytorch.org/docs/stable/notes/autograd.html#
+# It is pretty clear that there needs to be some base class which acts as a fundamental unit for all the operations
+# We can think of the unit which holds the data as Tensor and the unit which performs some operation as a function
+# That gives us two base classes: Tensor && Function
+
+# Mind blocking questions:
+# What happens when the value of the data is altered? How do we check that?
+
+# arrayable are all the types which could be converted to numpy arrays
+arrayable = Union[int, float, list, np.ndarray]
+
+
+def parseData(data):
+
+    # enforce only int, float data inside the numpy array -> Taken care by numpy
+
+    if data is None:
+        return None
+
+    # if not isinstance(data, arrayable.__args__):
+    #    raise TypeError('Only list, int, float or numpy array are supported')
+
+    if not isinstance(data, np.ndarray):
+        try:
+            return np.array(data, dtype=np.float32)
+        except ValueError:
+            raise TypeError("Only list, int, float or numpy array are supported")
+
+    return data
+
+
+def checkTensor(t: "Tensor"):
+
+    if isinstance(t, Tensor):
+        return True
+
+    return False
+
+
+def checkInstance(obj: Union[arrayable, "Tensor"], error_status: str = None):
+    if not isinstance(t, "Tensor"):
+        try:
+            obj = Tensor(parseData(obj))
+        except TypeError:
+            raise TypeError(error_status)
+
+    return obj
 
 
 class Tensor:
-    def __init__(self, data=None, requires_grad: bool = False) -> None:
+    def __init__(
+        self,
+        data: arrayable = None,
+        dep: List["Tensor"] = [],
+        requires_grad: bool = False,
+    ) -> None:
 
-        data = self._checkData(data)
+        self.data = parseData(data)
         self.requires_grad = requires_grad
-        self.grad = None
-        self._previous = list()
+        self._backward = lambda: None
 
-    def _checkData(self, x) -> np.ndarray:
-        """
-        Checks the type of the data and
-        raises an error when it is not a scalar or a np.array
-        """
-
-        if type(x) in (int, float):
-            self.data = np.array([x], dtype=np.float32)
-
-        elif type(x) in (np.ndarray, np.float32):
-            self.data = x.astype(np.float32)
-
+        if requires_grad:
+            self.zero_grad()
         else:
-            raise ValueError(
-                "Invalid data type. Input data should either be a scalar or numpy array"
-            )
+            self.grad = None
 
-        return x
+        self._dependecies = dep
 
     @property
-    def shape(self):
+    def shape(self) -> tuple:
+        if self.data is None:
+            return (0,)
         return self.data.shape
 
-    def __add__(self, obj: "Tensor") -> "Tensor":
-        def _backward():
-            """
-            Compute the gradients for the operator
-            """
-            raise NotImplementedError("Backward propogation not implemented")
-
-        return Tensor(self.data + obj.data)
-
-    def __sub__(self, obj: "Tensor") -> "Tensor":
-        def _backward():
-            """
-            Compute the gradients for the operator
-            """
-            raise NotImplementedError("Backward propogation not implemented")
-
-        return Tensor(self.data - obj.data)
-
-    def __mul__(self, obj: "Tensor") -> "Tensor":
-        def _backward():
-            """
-            Compute the gradients for the operator
-            """
-            raise NotImplementedError("Backward propogation not implemented")
-
-        return Tensor(self.data * obj.data)
-
-    def __truediv__(self, obj: "Tensor") -> "Tensor":
-        def _backward():
-            """
-            Compute the gradients for the operator
-            """
-            raise NotImplementedError("Backward propogation not implemented")
-
-        return Tensor(self.data / obj.data)
-
-    def matmul(self, obj: "Tensor") -> "Tensor":
-        if isinstance(obj, Tensor) is not True:
-            raise ValueError(
-                "Invalid data type. Matrix multiplication can only be performed on tensors"
-            )
-        return Tensor(np.matmul(self.data, obj.data))
-
-    def transpose(self) -> "Tensor":
-        """
-        Return the tranpose of the tensor
-        """
-        return Tensor(self.data.T)
-
-    def T(self) -> None:
-        """
-        Replace the transpose of the tensor in place
-        """
-        self.data = self.data.T
-
     def __repr__(self) -> str:
-        return f"<Tensor(Data={self.data}, shape={self.shape}, requires_grad={self.requires_grad})>"
+
+        return f"<Tensor({self.data}, shape={self.shape})>"

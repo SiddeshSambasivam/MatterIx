@@ -137,4 +137,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-dev
+# Vim swap file
+*.swp
+*.swo

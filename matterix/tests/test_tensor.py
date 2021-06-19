@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 from ..tensor import Tensor
 
 
@@ -12,23 +13,33 @@ class TestTensor(unittest.TestCase):
         Test to check if data assigning works
         """
 
-        def _test():
-            a = Tensor([1])
+        def _testTypeError():
+            a = Tensor(['f'])
 
-        with self.assertRaises(ValueError):
-            _test()
+        with self.assertRaises(TypeError):
+            _testTypeError()
+        
+        assert Tensor().data == None
 
     def test_addition(self):
         """
         Test addition operation of a Tensor
         """
 
-        at = Tensor(1)
-        bt = Tensor(2)
+        at = Tensor([1,2], requires_grad=True)
+        bt = Tensor([3,4])
         sum_t = at + bt
 
-        assert sum_t.data == 3
+        assert all(sum_t.data == np.array([4,6]))
+        assert sum_t.requires_grad == True
+        
+        sum_t.backward()
 
+        assert all(sum_t.grad.data == np.array([1,1]))
+        assert all(at.grad.data == np.array([1,1]))
+        assert bt.grad == None
+
+        
     def test_subtraction(self):
         """
         Test subtraction operation of a Tensor
