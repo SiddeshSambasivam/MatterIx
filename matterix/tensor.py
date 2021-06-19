@@ -84,14 +84,19 @@ class Tensor:
 
                 # After a day of trying to solve this problem, I finally found this genius figuring out the same problem. Thank you Joel Grus
                 # Reference: https://youtu.be/DVKaLdblCIw
+
+                # Normalizes the rank of the tensor to that of the gradient
                 if child.grad.data.ndim < _gradient.data.ndim:
                     drop_dim: int = _gradient.data.ndim - child.grad.data.ndim
                     print(f"Number of dim to drop= {drop_dim}")
 
                     for _ in range(drop_dim):
-
                         _gradient.data = _gradient.data.sum(axis=0)
 
+                # What is happening?
+                # As we have already normalized the rank, we just sum over the dim while retaining dim
+                # (2,3) + (1,3) => (2,3) :
+                # (1,3) is broadcasted, so essentially we just have to sum over the _gradient along the dim which is equal to that of the child.
                 for i, dim in enumerate(child.data.shape):
                     if dim == 1:
                         _gradient.data = _gradient.data.sum(axis=i, keepdims=True)
