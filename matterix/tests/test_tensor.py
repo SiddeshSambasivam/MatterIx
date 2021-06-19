@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import torch
 from ..tensor import Tensor
 
 
@@ -14,11 +15,11 @@ class TestTensor(unittest.TestCase):
         """
 
         def _testTypeError():
-            a = Tensor(['f'])
+            a = Tensor(["f"])
 
         with self.assertRaises(TypeError):
             _testTypeError()
-        
+
         assert Tensor().data == None
 
     def test_addition(self):
@@ -26,20 +27,12 @@ class TestTensor(unittest.TestCase):
         Test addition operation of a Tensor
         """
 
-        at = Tensor([1,2], requires_grad=True)
-        bt = Tensor([3,4])
+        at = Tensor([1, 2])
+        bt = Tensor([3, 4])
         sum_t = at + bt
 
-        assert all(sum_t.data == np.array([4,6]))
-        assert sum_t.requires_grad == True
-        
-        sum_t.backward()
+        assert all(sum_t.data == np.array([4, 6]))
 
-        assert all(sum_t.grad.data == np.array([1,1]))
-        assert all(at.grad.data == np.array([1,1]))
-        assert bt.grad == None
-
-        
     def test_subtraction(self):
         """
         Test subtraction operation of a Tensor
@@ -62,13 +55,35 @@ class TestTensor(unittest.TestCase):
 
         assert mul_t.data == 2
 
-    def test_div(self):
+    def test_grad(self):
         """
-        Test addition operation of a Tensor
+        Check if gradient computation is correct
+
         """
 
-        at = Tensor(1)
-        bt = Tensor(2)
-        div_t = at / bt
+        # Need to check the gradients of tensor which is broadcasted during operations
 
-        assert div_t.data == 0.5
+        a = Tensor([[1, 2, 3], [1, 2, 3]])
+
+        b = Tensor([[1]])
+
+        c = a + b
+        d = c * a
+
+        d.backward()
+
+        at = torch.tensor(
+            [[1, 2, 3], [1, 2, 3]], dtype=torch.float32, requires_grad=True
+        )
+        bt = torch.tensor([[1]], dtype=torch.float32, requires_grad=True)
+        ct = at + bt
+        ct.retain_grad()
+        dt = ct * at
+        dt.retain_grad()
+
+        dt.backward(gradient=torch.ones_like(dt))
+
+        assert np.array_equal(at.grad.numpy(), a.grad.data) == True
+        assert np.array_equal(bt.grad.numpy(), b.grad.data) == True
+        assert np.array_equal(ct.grad.numpy(), c.grad.data) == True
+        assert np.array_equal(dt.grad.numpy(), d.grad.data) == True
