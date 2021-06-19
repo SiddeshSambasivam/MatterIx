@@ -1,80 +1,118 @@
-from typing import List, Union, NamedTuple
+from typing import List, Union
 import numpy as np
 
 # Reference: https://pytorch.org/docs/stable/notes/autograd.html#
-# It is pretty clear that there needs to be some base class which acts as a fundamental unit for all the operations
-# We can think of the unit which holds the data as Tensor and the unit which performs some operation as a function
-# That gives us two base classes: Tensor && Function
+# From the documentation, its clear that we can implement naive autograd with two base classes.
+# Tensor: Fundamental unit of the framework to store data and all its properties.
+# Function: It is base class to store context (inputs and outputs) for each operation to compute the gradient.
 
-# Mind blocking questions:
-# What happens when the value of the data is altered? How do we check that?
-
-# arrayable are all the types which could be converted to numpy arrays
-arrayable = Union[int, float, list, np.ndarray]
+# Arrayable are all the types which could be converted to Tensors.
+Arrayable = Union[int, float, list, np.ndarray]
 
 
-def parseData(data):
+def parseArrayable(object: Union[Arrayable, "Tensor"]):
+    """Checks if the object type is arrayable and returns the numpy array of the object
 
-    # enforce only int, float data inside the numpy array -> Taken care by numpy
+    Args:
+    Object -- input provided by the user for a Tensor
+    """
 
-    if data is None:
+    if object is None:
         return None
 
-    # if not isinstance(data, arrayable.__args__):
-    #    raise TypeError('Only list, int, float or numpy array are supported')
-
-    if not isinstance(data, np.ndarray):
+    if not isinstance(object, np.ndarray):
         try:
-            return np.array(data, dtype=np.float32)
+            # enforce only int, float data inside the numpy array -> Taken care by numpy
+            return np.array(object, dtype=np.float32)
         except ValueError:
             raise TypeError("Only list, int, float or numpy array are supported")
 
-    return data
+    return object
 
 
 def checkTensor(t: "Tensor"):
-
+    """Checks if it is a tensor"""
     if isinstance(t, Tensor):
         return True
 
     return False
 
 
-def checkInstance(obj: Union[arrayable, "Tensor"], error_status: str = None):
-    if not isinstance(t, "Tensor"):
-        try:
-            obj = Tensor(parseData(obj))
-        except TypeError:
-            raise TypeError(error_status)
-
-    return obj
-
-
 class Tensor:
-    def __init__(
-        self,
-        data: arrayable = None,
-        dep: List["Tensor"] = [],
-        requires_grad: bool = False,
-    ) -> None:
+    def __init__(self, data: Arrayable = None, children=[]):
 
-        self.data = parseData(data)
-        self.requires_grad = requires_grad
-        self._backward = lambda: None
-
-        if requires_grad:
-            self.zero_grad()
-        else:
-            self.grad = None
-
-        self._dependecies = dep
-
-    @property
-    def shape(self) -> tuple:
-        if self.data is None:
-            return (0,)
-        return self.data.shape
+        self.data = parseArrayable(data)
+        self.children = children
+        self.grad = None
 
     def __repr__(self) -> str:
-
         return f"<Tensor({self.data}, shape={self.shape})>"
+
+    def __add__(self, obj):
+
+        assert type(obj) == Tensor, "Addition operation is only valid with tensors"
+
+        return add(self, obj)
+
+    def __sub__(self, obj):
+
+        assert type(obj) == Tensor, "Subtraction operation is only valid with tensors"
+
+        return sub(self, obj)
+
+    def __mul__(self, obj):
+
+        assert (
+            type(obj) == Tensor
+        ), "Multiplication operation is only valid with tensors"
+
+        return mul(self, obj)
+
+    @property
+    def shape(self):
+        return self.data.shape
+
+    def backward(self) -> None:
+        def grad_fn(t, grad):
+
+            for (child, local_gradient) in t.children:
+
+                if child.grad is None:
+                    child.grad = Tensor(np.zeros_like(child.data))
+
+                _gradient = local_gradient * grad
+                child.grad += _gradient
+
+                grad_fn(child, _gradient)
+
+        self.grad = Tensor(np.ones_like(self.data))
+        grad_fn(self, Tensor(np.ones_like(self.data)))
+
+
+def add(a: Tensor, b: Tensor):
+
+    """
+    Rule 1: If the two arrays differ in their number of dimensions, the shape of the one with fewer dimensions is padded with ones on its leading (left) side.
+    Rule 2: If the shape of the two arrays does not match in any dimension, the array with shape equal to 1 in that dimension is stretched to match the other shape.
+    Rule 3: If in any dimension the sizes disagree and neither is equal to 1, an error is raised.
+    """
+
+    ct = Tensor(
+        a.data + b.data,
+        children=[(a, Tensor(np.ones_like(a))), (b, Tensor(np.ones_like(b)))],
+    )
+
+    return ct
+
+
+def sub(a: Tensor, b: Tensor):
+
+    return Tensor(
+        a.data - b.data,
+        children=[(a, Tensor(np.ones_like(a))), (b, Tensor(np.ones_like(a)))],
+    )
+
+
+def mul(a: Tensor, b: Tensor):
+
+    return Tensor(a.data * b.data, children=[(a, Tensor(b.data)), (b, Tensor(a.data))])
