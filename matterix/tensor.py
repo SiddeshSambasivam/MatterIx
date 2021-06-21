@@ -1,7 +1,7 @@
 from typing import List, Union
 import numpy as np
 
-from utils import register
+from utils import register_fn
 
 # Reference: https://pytorch.org/docs/stable/notes/autograd.html#
 # From the documentation, its clear that we can implement naive autograd with two base classes.
@@ -122,7 +122,7 @@ def compute_grad(tensor, local_gradient, output_grad):
         tensor.grad += _gradient
 
 
-@register(Tensor, "__add__")
+@register_fn(Tensor, "__add__")
 def add(a: Tensor, b: Tensor):
     """
     Returns the sum of input tensors with their local gradients
@@ -148,7 +148,7 @@ def add(a: Tensor, b: Tensor):
     return output
 
 
-@register(Tensor, "__sub__")
+@register_fn(Tensor, "__sub__")
 def sub(a: Tensor, b: Tensor):
     """
     Returns the difference of input tensors with their local gradients
@@ -169,7 +169,7 @@ def sub(a: Tensor, b: Tensor):
     return output
 
 
-@register(Tensor, "__mul__")
+@register_fn(Tensor, "__mul__")
 def mul(a: Tensor, b: Tensor):
     """
     Returns the product of input tensors with their local gradients

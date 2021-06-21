@@ -1,7 +1,7 @@
 from functools import wraps
 
 
-def register(cls, fn_name):
+def register_fn(cls, fn_name):
     """Decorator to add function dynamically to a class"""
 
     def decorator(func):
