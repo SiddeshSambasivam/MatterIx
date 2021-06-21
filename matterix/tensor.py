@@ -24,8 +24,6 @@ def parseArrayable(object: Union[Arrayable, "Tensor"]):
         try:
             # enforce only int, float data inside the numpy array -> Taken care by numpy
             res = np.array(object, dtype=np.float32)
-            # if res.shape == ():
-            # res.resize(1)
             return res
         except ValueError:
             raise TypeError("Only list, int, float or numpy array are supported")
@@ -124,29 +122,37 @@ class Tensor:
 
 
 def add(a: Tensor, b: Tensor):
-
     """
-    Rule 1: If the two arrays differ in their number of dimensions, the shape of the one with fewer dimensions is padded with ones on its leading (left) side.
-    Rule 2: If the shape of the two arrays does not match in any dimension, the array with shape equal to 1 in that dimension is stretched to match the other shape.
-    Rule 3: If in any dimension the sizes disagree and neither is equal to 1, an error is raised.
+    Returns the sum of input tensors with their local gradients
     """
-
-    ct = Tensor(
+    output = Tensor(
         a.data + b.data,
         children=[(a, Tensor(np.ones_like(a))), (b, Tensor(np.ones_like(b)))],
     )
 
-    return ct
+    return output
 
 
 def sub(a: Tensor, b: Tensor):
+    """
+    Returns the difference of input tensors with their local gradients
+    """
 
-    return Tensor(
+    output = Tensor(
         a.data - b.data,
-        children=[(a, Tensor(np.ones_like(a))), (b, Tensor(np.ones_like(a)))],
+        children=[(a, Tensor(np.ones_like(a))), (b, Tensor(-1 * np.ones_like(a)))],
     )
+
+    return output
 
 
 def mul(a: Tensor, b: Tensor):
+    """
+    Returns the product of input tensors with their local gradients
+    """
 
-    return Tensor(a.data * b.data, children=[(a, Tensor(b.data)), (b, Tensor(a.data))])
+    output = Tensor(
+        a.data * b.data, children=[(a, Tensor(b.data)), (b, Tensor(a.data))]
+    )
+
+    return output
