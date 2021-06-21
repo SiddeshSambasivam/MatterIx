@@ -55,13 +55,38 @@ class TestTensor(unittest.TestCase):
 
         assert mul_t.data == 2
 
-    def test_grad(self):
+    def test_grad_simple(self):
         """
         Check if gradient computation is correct
 
         """
 
         # Need to check the gradients of tensor which is broadcasted during operations
+
+        a = Tensor([[1, 2], [1, 2]])
+
+        b = Tensor([[1, 2], [1, 2]])
+
+        c = a + b
+        d = c * a
+
+        d.backward()
+
+        at = torch.tensor([[1, 2], [1, 2]], dtype=torch.float32, requires_grad=True)
+        bt = torch.tensor([[1, 2], [1, 2]], dtype=torch.float32, requires_grad=True)
+        ct = at + bt
+        ct.retain_grad()
+        dt = ct * at
+        dt.retain_grad()
+
+        dt.backward(gradient=torch.ones_like(dt))
+
+        assert np.array_equal(at.grad.numpy(), a.grad.data) == True
+        assert np.array_equal(bt.grad.numpy(), b.grad.data) == True
+        assert np.array_equal(ct.grad.numpy(), c.grad.data) == True
+        assert np.array_equal(dt.grad.numpy(), d.grad.data) == True
+
+    def test_broadcasting(self):
 
         a = Tensor([[1, 2, 3], [1, 2, 3]])
 
@@ -88,6 +113,8 @@ class TestTensor(unittest.TestCase):
         assert np.array_equal(ct.grad.numpy(), c.grad.data) == True
         assert np.array_equal(dt.grad.numpy(), d.grad.data) == True
 
+    def test_singular(self):
+
         a = Tensor([[1, 2, 3], [1, 2, 3]])
 
         b = Tensor(1)
@@ -107,9 +134,7 @@ class TestTensor(unittest.TestCase):
         dt.retain_grad()
 
         dt.backward(gradient=torch.ones_like(dt))
-        # print()
-        # print(bt.grad, b.grad)
-        # print()
+
         assert np.array_equal(at.grad.numpy(), a.grad.data) == True
         assert np.array_equal(bt.grad.numpy(), b.grad.data) == True
         assert np.array_equal(ct.grad.numpy(), c.grad.data) == True
