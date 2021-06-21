@@ -38,6 +38,8 @@ class TestTensor(unittest.TestCase):
         assert at.grad.data.tolist() == [1, 1]
         assert bt.grad.data.tolist() == [1, 1]
 
+        assert (1 + at).data.tolist() == [2, 3]
+
     # @unittest.skip("Under development")
     def test_subtraction(self):
         """

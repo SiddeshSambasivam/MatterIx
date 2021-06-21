@@ -1,5 +1,7 @@
+from ast import parse
 from typing import List, Tuple, Union
 import numpy as np
+from numpy.lib.arraysetops import isin
 
 from .utils import register_fn
 
@@ -125,9 +127,11 @@ def add(a: Tensor, b: Tensor):
     Returns the sum of input tensors with their local gradients
     """
 
-    assert (
-        type(a) == Tensor and type(b) == Tensor
-    ), "Addition operation is only valid with tensors"
+    if not isinstance(a, Tensor):
+        a = Tensor(parseArrayable(a))
+
+    if not isinstance(b, Tensor):
+        b = Tensor(parseArrayable(b))
 
     output = Tensor(
         a.data + b.data,
@@ -145,15 +149,22 @@ def add(a: Tensor, b: Tensor):
     return output
 
 
+@register_fn(Tensor, "__radd__")
+def radd(a: Union[int, float, list], b: Tensor):
+    return add(a, b)
+
+
 @register_fn(Tensor, "__sub__")
 def sub(a: Tensor, b: Tensor):
     """
     Returns the difference of input tensors with their local gradients
     """
 
-    assert (
-        type(a) == Tensor and type(b) == Tensor
-    ), "Subtraction operation is only valid with tensors"
+    if not isinstance(a, Tensor):
+        a = Tensor(parseArrayable(a))
+
+    if not isinstance(b, Tensor):
+        b = Tensor(parseArrayable(b))
 
     output = Tensor(
         a.data - b.data,
@@ -171,15 +182,22 @@ def sub(a: Tensor, b: Tensor):
     return output
 
 
+@register_fn(Tensor, "__rsub__")
+def rsub(a: Union[int, float, list], b: Tensor):
+    return sub(a, b)
+
+
 @register_fn(Tensor, "__mul__")
 def mul(a: Tensor, b: Tensor):
     """
     Returns the product of input tensors with their local gradients
     """
 
-    assert (
-        type(a) == Tensor and type(b) == Tensor
-    ), "Multiplication operation is only valid with tensors"
+    if not isinstance(a, Tensor):
+        a = Tensor(parseArrayable(a))
+
+    if not isinstance(b, Tensor):
+        b = Tensor(parseArrayable(b))
 
     output = Tensor(
         a.data * b.data,
@@ -197,10 +215,16 @@ def mul(a: Tensor, b: Tensor):
     return output
 
 
+@register_fn(Tensor, "__rmul__")
+def rmul(a: Union[List, int, float], b: Tensor):
+    return (a, b)
+
+
 @register_fn(Tensor, "__pow__")
 def power(a: Tensor, pow: int):
 
-    assert type(a) == Tensor, f"{a} is not a tensor"
+    if not isinstance(a, Tensor):
+        a = Tensor(parseArrayable(a))
 
     output = Tensor(a.data ** (pow), requires_grad=a.requires_grad, children=[a])
 
@@ -215,9 +239,11 @@ def power(a: Tensor, pow: int):
 @register_fn(Tensor, "__truediv__")
 def div(a: Tensor, b: Tensor):
 
-    assert (
-        type(a) == Tensor and type(b) == Tensor
-    ), "Division operation is only valid with tensors"
+    if not isinstance(a, Tensor):
+        a = Tensor(parseArrayable(a))
+
+    if not isinstance(b, Tensor):
+        b = Tensor(parseArrayable(b))
 
     inv_b = power(b, -1)
 
@@ -235,6 +261,11 @@ def div(a: Tensor, b: Tensor):
     output.backward_fn = backward_fn
 
     return output
+
+
+@register_fn(Tensor, "__rtruediv__")
+def rdiv(a: Union[List, int, float], b: Tensor):
+    return div(a, b)
 
 
 def ones_like(array: Arrayable, dtype=None):
