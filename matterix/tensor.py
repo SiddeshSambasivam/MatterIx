@@ -1,7 +1,7 @@
 from typing import List, Union
 import numpy as np
 
-from utils import register_fn
+from .utils import register_fn
 
 # Reference: https://pytorch.org/docs/stable/notes/autograd.html#
 # From the documentation, its clear that we can implement naive autograd with two base classes.
@@ -156,7 +156,8 @@ def sub(a: Tensor, b: Tensor):
 
     output = Tensor(
         a.data - b.data,
-        children=[(a, Tensor(np.ones_like(a))), (b, Tensor(-1 * np.ones_like(a)))],
+        children=[a, b],
+        requires_grad=(a.requires_grad or b.requires_grad),
     )
 
     def backward_fn():
@@ -175,12 +176,16 @@ def mul(a: Tensor, b: Tensor):
     Returns the product of input tensors with their local gradients
     """
 
-    output = Tensor(a.data * b.data, children=[a, b])
+    output = Tensor(
+        a.data * b.data,
+        children=[a, b],
+        requires_grad=(a.requires_grad or b.requires_grad),
+    )
 
     def backward_fn():
 
-        compute_grad(a, Tensor(np.ones_like(b)), output.grad)
-        compute_grad(b, Tensor(np.ones_like(a)), output.grad)
+        compute_grad(a, b, output.grad)
+        compute_grad(b, a, output.grad)
 
     output.backward_fn = backward_fn
 
