@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 import torch
-from ..tensor import Tensor
+from ..tensor import Tensor, ones_like
 
 
 class TestTensor(unittest.TestCase):
@@ -139,3 +139,13 @@ class TestTensor(unittest.TestCase):
         assert np.array_equal(bt.grad.numpy(), b.grad.data) == True
         assert np.array_equal(ct.grad.numpy(), c.grad.data) == True
         assert np.array_equal(dt.grad.numpy(), d.grad.data) == True
+
+    def test_ones_like(self):
+
+        a = np.array([1, 2, 3], dtype=np.float32)
+        b = np.array(8)
+        output_1 = ones_like(a)
+        output_2 = ones_like(b)
+
+        assert output_1.data.tolist() == [1.0, 1.0, 1.0]
+        assert output_2.data.tolist() == 1

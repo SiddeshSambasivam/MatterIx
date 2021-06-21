@@ -156,3 +156,10 @@ def mul(a: Tensor, b: Tensor):
     )
 
     return output
+
+
+def ones_like(array: Arrayable, dtype=None):
+
+    np_object = parseArrayable(array)
+
+    return Tensor(np.ones_like(np_object, dtype=dtype))
