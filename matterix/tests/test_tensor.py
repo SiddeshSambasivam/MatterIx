@@ -167,3 +167,21 @@ class TestTensor(unittest.TestCase):
 
         assert output_1.data.tolist() == [1.0, 1.0, 1.0]
         assert output_2.data.tolist() == 1
+
+    def test_div(self):
+
+        a = Tensor(1, requires_grad=True)
+        b = Tensor(2, requires_grad=True)
+        res = (a / b - a) * b
+
+        res.backward()
+
+        at = torch.tensor(1.0, requires_grad=True)
+        bt = torch.tensor(2.0, requires_grad=True)
+        res_t = (at / bt - at) * bt
+        print(f"Result of the division using pytorch: {res_t}")
+        res_t.backward()
+
+        assert res_t.tolist() == res.data.tolist()
+        assert at.grad.tolist() == a.grad.data.tolist()
+        assert bt.grad.tolist() == b.grad.data.tolist()

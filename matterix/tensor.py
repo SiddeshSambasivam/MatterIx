@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Tuple, Union
 import numpy as np
 
 from .utils import register_fn
@@ -49,7 +49,6 @@ class Tensor:
         def build_topo(v):
             if v not in visited:
                 visited.add(v)
-                print(v, type(v))
                 for child in v.children:
                     build_topo(child)
                 gradient_tape.append(v)
@@ -106,8 +105,6 @@ def compute_grad(tensor, local_gradient, output_grad):
         if tensor.grad.data.ndim < _gradient.data.ndim:
 
             drop_dim: int = _gradient.data.ndim - tensor.grad.data.ndim
-            print(f"Number of dim to drop= {drop_dim}")
-
             for _ in range(drop_dim):
                 _gradient.data = _gradient.data.sum(axis=0)
 
@@ -154,6 +151,10 @@ def sub(a: Tensor, b: Tensor):
     Returns the difference of input tensors with their local gradients
     """
 
+    assert (
+        type(a) == Tensor and type(b) == Tensor
+    ), "Subtraction operation is only valid with tensors"
+
     output = Tensor(
         a.data - b.data,
         children=[a, b],
@@ -176,6 +177,10 @@ def mul(a: Tensor, b: Tensor):
     Returns the product of input tensors with their local gradients
     """
 
+    assert (
+        type(a) == Tensor and type(b) == Tensor
+    ), "Multiplication operation is only valid with tensors"
+
     output = Tensor(
         a.data * b.data,
         children=[a, b],
@@ -186,6 +191,46 @@ def mul(a: Tensor, b: Tensor):
 
         compute_grad(a, b, output.grad)
         compute_grad(b, a, output.grad)
+
+    output.backward_fn = backward_fn
+
+    return output
+
+
+@register_fn(Tensor, "__pow__")
+def power(a: Tensor, pow: int):
+
+    assert type(a) == Tensor, f"{a} is not a tensor"
+
+    output = Tensor(a.data ** (pow), requires_grad=a.requires_grad, children=[a])
+
+    def backward_fn():
+        operation_gradient = Tensor(pow * a.data ** (pow - 1))
+        compute_grad(a, operation_gradient, output.grad)
+
+    output.backward_fn = backward_fn
+    return output
+
+
+@register_fn(Tensor, "__truediv__")
+def div(a: Tensor, b: Tensor):
+
+    assert (
+        type(a) == Tensor and type(b) == Tensor
+    ), "Division operation is only valid with tensors"
+
+    inv_b = power(b, -1)
+
+    output = Tensor(
+        a.data * inv_b.data,
+        children=[a, inv_b],
+        requires_grad=(a.requires_grad or inv_b.requires_grad),
+    )
+
+    def backward_fn():
+
+        compute_grad(a, inv_b, output.grad)
+        compute_grad(inv_b, a, output.grad)
 
     output.backward_fn = backward_fn
 
