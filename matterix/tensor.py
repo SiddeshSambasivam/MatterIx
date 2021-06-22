@@ -340,7 +340,7 @@ def transpose(a: Tensor):
 
 
 @register_fn(Tensor, "__matmul__")
-@not_working
+# @not_working
 def matmul(a: Tensor, b: Tensor) -> Tensor:
     """Return result of matrix multiplication of the inputs"""
 
@@ -355,12 +355,10 @@ def matmul(a: Tensor, b: Tensor) -> Tensor:
     )
 
     def backward_fn():
-        print(output.grad.T, "\n", b, "\n\n", a.data @ output.grad.data.T)
-        # output
-        a_local_gradient = Tensor(data=b.data @ output.grad.data)
-        b_local_gradient = Tensor(data=a.data @ output.grad.data.T)
 
-        print(a_local_gradient, b_local_gradient)
+        a_local_gradient = Tensor(data=output.grad.data @ b.data.T)
+        b_local_gradient = Tensor(data=a.data.T @ output.grad.data)
+
         compute_gradient(a, a_local_gradient)
         compute_gradient(b, b_local_gradient)
         pass
