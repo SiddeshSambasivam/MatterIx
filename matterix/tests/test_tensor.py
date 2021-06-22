@@ -1,5 +1,6 @@
 import math
 import unittest
+from unittest import result
 import numpy as np
 from ..tensor import Tensor
 
@@ -103,7 +104,7 @@ class TestTensor(unittest.TestCase):
         a = Tensor([[1, 2, 3], [1, 2, 3]], requires_grad=True)
 
         b = Tensor(1, requires_grad=True)
-
+        print(b)
         c = a + b
         d = c * a
 
@@ -125,6 +126,7 @@ class TestTensor(unittest.TestCase):
         assert output_1.data.tolist() == [1.0, 1.0, 1.0]
         assert output_2.data.tolist() == 1
 
+    # @unittest.skip("Under development")
     def test_div(self):
 
         a = Tensor(0.154, requires_grad=True)
@@ -136,3 +138,18 @@ class TestTensor(unittest.TestCase):
         assert math.isclose(res.data.tolist(), -0.0870, rel_tol=0.01) == True
         assert math.isclose(a.grad.tolist(), -0.5650, rel_tol=0.01) == True
         assert math.isclose(b.grad.tolist(), -0.1540, rel_tol=0.01) == True
+
+    @unittest.skip("Under development")
+    def test_matmul(self):
+
+        a = Tensor([[1, 2], [1, 2]], requires_grad=True)
+        b = Tensor([[1, 2, 3], [1, 2, 3]], requires_grad=True)
+
+        result = a @ b
+        result.backward()
+
+        print(a.grad)
+        print()
+        print(b.grad)
+
+        assert result.tolist() == [[3, 6, 9], [3, 6, 9]]

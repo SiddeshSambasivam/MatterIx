@@ -1,7 +1,7 @@
 from typing import List, Tuple, Union
 import numpy as np
 
-from .utils import register_fn
+from .utils import register_fn, not_working
 
 # Reference: https://pytorch.org/docs/stable/notes/autograd.html#
 # From the documentation, its clear that we can implement naive autograd with two base classes.
@@ -86,6 +86,14 @@ class Tensor:
         return Tensor(np.eye(int(rows), int(columns)))
 
     @property
+    def T(self) -> None:
+        # self.data = self.data.T
+        output = self
+        output.data = output.data.T
+        return output
+        # Tensor(self.data.T, self)
+
+    @property
     def shape(self) -> Tuple:
         """Returns the shape of the tensor"""
 
@@ -141,8 +149,7 @@ def create_tensors(inputs: Union[List[Tensor], InputTypes]) -> List[Tensor]:
 
 def compute_gradient(
     tensor_object: Tensor,
-    local_gradient: Tensor,
-    output_grad: Tensor,
+    _gradient: Tensor,
 ) -> None:
     """Computes the gradient for the tensor_object given the output grad
 
@@ -168,8 +175,6 @@ def compute_gradient(
             else:
                 tensor_object.grad = Tensor(np.zeros_like(tensor_object.data))
 
-        _gradient = output_grad * local_gradient
-
         # Normalizes the rank of the tensor_object to that of the gradient
         if tensor_object.grad.ndim < _gradient.ndim:
 
@@ -185,6 +190,9 @@ def compute_gradient(
             if dim == 1:
                 _gradient.data = _gradient.data.sum(axis=i, keepdims=True)
 
+        # assert (
+        # tensor_object.grad.shape == _gradient.shape
+        # ), f"Shape of gradient does not match: Var: {tensor_object.grad}\tGrad: {_gradient}"
         tensor_object.grad += _gradient
 
 
@@ -202,8 +210,11 @@ def add(a: Tensor, b: Tensor) -> Tensor:
 
     def backward_fn():
 
-        compute_gradient(a, Tensor(np.ones_like(a)), output.grad)
-        compute_gradient(b, Tensor(np.ones_like(b)), output.grad)
+        a_local_gradient = output.grad * Tensor(np.ones_like(a))
+        b_local_gradient = output.grad * Tensor(np.ones_like(b))
+
+        compute_gradient(a, a_local_gradient)
+        compute_gradient(b, b_local_gradient)
 
     output.backward_fn = backward_fn
 
@@ -229,8 +240,10 @@ def sub(a: Tensor, b: Tensor) -> Tensor:
 
     def backward_fn():
 
-        compute_gradient(a, Tensor(np.ones_like(a)), output.grad)
-        compute_gradient(b, Tensor(-1 * np.ones_like(b)), output.grad)
+        a_local_gradient = output.grad * Tensor(np.ones_like(a))
+        b_local_gradient = output.grad * Tensor(-1 * np.ones_like(b))
+        compute_gradient(a, a_local_gradient)
+        compute_gradient(b, b_local_gradient)
 
     output.backward_fn = backward_fn
 
@@ -256,8 +269,10 @@ def mul(a: Tensor, b: Tensor) -> Tensor:
 
     def backward_fn():
 
-        compute_gradient(a, b, output.grad)
-        compute_gradient(b, a, output.grad)
+        a_local_gradient = output.grad * b
+        b_local_gradient = output.grad * a
+        compute_gradient(a, a_local_gradient)
+        compute_gradient(b, b_local_gradient)
 
     output.backward_fn = backward_fn
 
@@ -278,7 +293,9 @@ def power(a: Tensor, pow: int) -> Tensor:
 
     def backward_fn():
         operation_gradient = Tensor(pow * a.data ** (pow - 1))
-        compute_gradient(a, operation_gradient, output.grad)
+        _gradient = output.grad * operation_gradient
+
+        compute_gradient(a, _gradient)
 
     output.backward_fn = backward_fn
     return output
@@ -299,8 +316,11 @@ def div(a: Tensor, b: Tensor) -> Tensor:
 
     def backward_fn():
 
-        compute_gradient(a, inv_b, output.grad)
-        compute_gradient(inv_b, a, output.grad)
+        a_local_gradient = output.grad * inv_b
+        b_local_gradient = output.grad * a
+
+        compute_gradient(a, a_local_gradient)
+        compute_gradient(inv_b, b_local_gradient)
 
     output.backward_fn = backward_fn
 
@@ -310,3 +330,41 @@ def div(a: Tensor, b: Tensor) -> Tensor:
 @register_fn(Tensor, "__rtruediv__")
 def rdiv(a: Union[List, int, float], b: Tensor) -> Tensor:
     return div(a, b)
+
+
+@register_fn(Tensor, "transpose")
+def transpose(a: Tensor):
+    a = create_tensors(a)
+
+    return Tensor(a.data.T, requires_grad=a.requires_grad, children=a.children)
+
+
+@register_fn(Tensor, "__matmul__")
+@not_working
+def matmul(a: Tensor, b: Tensor) -> Tensor:
+    """Return result of matrix multiplication of the inputs"""
+
+    a, b = create_tensors([a, b])
+
+    # print(f"Shape of a: {a.shape}\t Shape of b: {b.shape} and result= {a.data@b.data}")
+    data = a.data @ b.data
+    output = Tensor(
+        data=data,
+        requires_grad=(a.requires_grad or b.requires_grad),
+        children=[a, b],
+    )
+
+    def backward_fn():
+        print(output.grad.T, "\n", b, "\n\n", a.data @ output.grad.data.T)
+        # output
+        a_local_gradient = Tensor(data=b.data @ output.grad.data)
+        b_local_gradient = Tensor(data=a.data @ output.grad.data.T)
+
+        print(a_local_gradient, b_local_gradient)
+        compute_gradient(a, a_local_gradient)
+        compute_gradient(b, b_local_gradient)
+        pass
+
+    output.backward_fn = backward_fn
+
+    return output

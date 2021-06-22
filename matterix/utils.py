@@ -13,3 +13,11 @@ def register_fn(cls, fn_name):
         return func
 
     return decorator
+
+
+def not_working(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        raise NotImplementedError("Function still under development")
+
+    return wrapper
