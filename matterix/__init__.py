@@ -1,1 +1,1 @@
-from .tensor import Tensor, ones_like
+from .tensor import Tensor
