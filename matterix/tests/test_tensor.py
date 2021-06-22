@@ -8,6 +8,7 @@ from ..tensor import Tensor
 class TestTensor(unittest.TestCase):
     """Unit tests for Tensor module"""
 
+    # @unittest.skip("Under development")
     def test_assign(self):
         """Test to check if data assigning works"""
 
@@ -19,6 +20,7 @@ class TestTensor(unittest.TestCase):
 
         assert Tensor().data == None
 
+    # @unittest.skip("Under development")
     def test_addition_grad(self):
         """Test addition operation of a Tensor"""
 
@@ -139,7 +141,7 @@ class TestTensor(unittest.TestCase):
         assert math.isclose(a.grad.tolist(), -0.5650, rel_tol=0.01) == True
         assert math.isclose(b.grad.tolist(), -0.1540, rel_tol=0.01) == True
 
-    @unittest.skip("Under development")
+    # @unittest.skip("Under development")
     def test_matmul(self):
 
         a = Tensor([[1, 2], [1, 2]], requires_grad=True)
@@ -148,8 +150,7 @@ class TestTensor(unittest.TestCase):
         result = a @ b
         result.backward()
 
-        print(a.grad)
-        print()
-        print(b.grad)
-
         assert result.tolist() == [[3, 6, 9], [3, 6, 9]]
+        assert result.grad.tolist() == [[1, 1, 1], [1, 1, 1]]
+        assert a.grad.tolist() == [[6, 6], [6, 6]]
+        assert b.grad.tolist() == [[2, 2, 2], [4, 4, 4]]
