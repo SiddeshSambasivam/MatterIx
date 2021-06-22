@@ -1,8 +1,7 @@
 import math
 import unittest
-from unittest import result
 import numpy as np
-from ..tensor import Tensor
+from matterix import Tensor
 
 
 class TestTensor(unittest.TestCase):
