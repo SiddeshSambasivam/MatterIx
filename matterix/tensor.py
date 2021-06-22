@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, NamedTuple, Callable
 import numpy as np
 
 from .utils import register_fn
@@ -13,7 +13,13 @@ InputTypes = Union[int, float, list, np.ndarray]
 
 
 class Tensor:
-    """ """
+    """
+    `Tensor` is a n-dimensional matrix to store floating-point data.
+
+    All computations are representated as a graphs and each tensor represents a node in the graph.
+
+
+    """
 
     def __init__(
         self,
