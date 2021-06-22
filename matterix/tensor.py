@@ -14,8 +14,11 @@ InputTypes = Union[int, float, list, np.ndarray]
 
 class Tensor:
     def __init__(
-        self, data: InputTypes = None, requires_grad: bool = False, children=[]
-    ):
+        self,
+        data: InputTypes = None,
+        requires_grad: bool = False,
+        children: List["Tensor"] = [],
+    ) -> None:
 
         self.data = create_numpy_array(data)
         self.children = children
@@ -27,7 +30,7 @@ class Tensor:
         return f"<Tensor({self.data}, shape={self.shape})>"
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple:
         if self.data.shape == ():
             return (1,)
         return self.data.shape
@@ -61,7 +64,7 @@ class Tensor:
             v.backward_fn()
 
 
-def create_numpy_array(object: Union[InputTypes, "Tensor"]):
+def create_numpy_array(object: Union[InputTypes, "Tensor"]) -> np.ndarray:
     """Checks if the object type is arrayable and returns the numpy array of the object
 
     Args:
@@ -82,29 +85,41 @@ def create_numpy_array(object: Union[InputTypes, "Tensor"]):
     return object
 
 
-def compute_grad(tensor, local_gradient, output_grad):
-    """Computes the gradient for the tensor given the output grad
+def compute_grad(
+    tensor_object: Tensor,
+    local_gradient: Tensor,
+    output_grad: Tensor,
+) -> None:
+    """Computes the gradient for the tensor_object given the output grad
 
-    Args:
-    local_gradient: A parameter to pass the local gradient for an operation (addition, subtraction, ...)
+    Parameters
+    ----------
 
+    Arg: tensor_object (Tensor)
+    Tensor for which the gradient is to be computed
+
+    Arg: local_gradient (Tensor)
+    Parameter to pass the local gradient of `tensor_object` for an operation (addition, subtraction, ...)
+
+    Arg: output_grad (Tensor)
+    Gradient of the output tensor, `tensor_object` radient for the operation is computed w.r.t the `output_grad`
     """
 
-    if tensor.requires_grad:
+    if tensor_object.requires_grad:
 
-        if tensor.grad is None:
+        if tensor_object.grad is None:
             # Addresses the case when the data is a int or a float
-            if tensor.data.shape == ():
-                tensor.grad = Tensor(np.zeros_like(1))
+            if tensor_object.data.shape == ():
+                tensor_object.grad = Tensor(np.zeros_like(1))
             else:
-                tensor.grad = Tensor(np.zeros_like(tensor.data))
+                tensor_object.grad = Tensor(np.zeros_like(tensor_object.data))
 
         _gradient = output_grad * local_gradient
 
-        # Normalizes the rank of the tensor to that of the gradient
-        if tensor.grad.data.ndim < _gradient.data.ndim:
+        # Normalizes the rank of the tensor_object to that of the gradient
+        if tensor_object.grad.data.ndim < _gradient.data.ndim:
 
-            drop_dim: int = _gradient.data.ndim - tensor.grad.data.ndim
+            drop_dim: int = _gradient.data.ndim - tensor_object.grad.data.ndim
             for _ in range(drop_dim):
                 _gradient.data = _gradient.data.sum(axis=0)
 
@@ -112,17 +127,17 @@ def compute_grad(tensor, local_gradient, output_grad):
         # As we have already normalized the rank, we just sum over the dim while retaining dim
         # (2,3) + (1,3) => (2,3) :
         # (1,3) is broadcasted, so essentially we just have to sum over the _gradient along the dim which is equal to that of the child.
-        for i, dim in enumerate(tensor.data.shape):
+        for i, dim in enumerate(tensor_object.data.shape):
             if dim == 1:
                 _gradient.data = _gradient.data.sum(axis=i, keepdims=True)
 
-        tensor.grad += _gradient
+        tensor_object.grad += _gradient
 
 
 @register_fn(Tensor, "__add__")
-def add(a: Tensor, b: Tensor):
+def add(a: Tensor, b: Tensor) -> Tensor:
     """
-    Returns the sum of input tensors with their local gradients
+    Returns the sum of input tensor_objects with their local gradients
     """
 
     if not isinstance(a, Tensor):
@@ -148,14 +163,14 @@ def add(a: Tensor, b: Tensor):
 
 
 @register_fn(Tensor, "__radd__")
-def radd(a: Union[int, float, list], b: Tensor):
+def radd(a: Union[int, float, list], b: Tensor) -> Tensor:
     return add(a, b)
 
 
 @register_fn(Tensor, "__sub__")
-def sub(a: Tensor, b: Tensor):
+def sub(a: Tensor, b: Tensor) -> Tensor:
     """
-    Returns the difference of input tensors with their local gradients
+    Returns the difference of input tensor_objects with their local gradients
     """
 
     if not isinstance(a, Tensor):
@@ -181,14 +196,14 @@ def sub(a: Tensor, b: Tensor):
 
 
 @register_fn(Tensor, "__rsub__")
-def rsub(a: Union[int, float, list], b: Tensor):
+def rsub(a: Union[int, float, list], b: Tensor) -> Tensor:
     return sub(a, b)
 
 
 @register_fn(Tensor, "__mul__")
-def mul(a: Tensor, b: Tensor):
+def mul(a: Tensor, b: Tensor) -> Tensor:
     """
-    Returns the product of input tensors with their local gradients
+    Returns the product of input tensor_objects with their local gradients
     """
 
     if not isinstance(a, Tensor):
@@ -214,12 +229,12 @@ def mul(a: Tensor, b: Tensor):
 
 
 @register_fn(Tensor, "__rmul__")
-def rmul(a: Union[List, int, float], b: Tensor):
+def rmul(a: Union[List, int, float], b: Tensor) -> Tensor:
     return (a, b)
 
 
 @register_fn(Tensor, "__pow__")
-def power(a: Tensor, pow: int):
+def power(a: Tensor, pow: int) -> Tensor:
 
     if not isinstance(a, Tensor):
         a = Tensor(create_numpy_array(a))
@@ -235,7 +250,7 @@ def power(a: Tensor, pow: int):
 
 
 @register_fn(Tensor, "__truediv__")
-def div(a: Tensor, b: Tensor):
+def div(a: Tensor, b: Tensor) -> Tensor:
 
     if not isinstance(a, Tensor):
         a = Tensor(create_numpy_array(a))
@@ -262,11 +277,11 @@ def div(a: Tensor, b: Tensor):
 
 
 @register_fn(Tensor, "__rtruediv__")
-def rdiv(a: Union[List, int, float], b: Tensor):
+def rdiv(a: Union[List, int, float], b: Tensor) -> Tensor:
     return div(a, b)
 
 
-def ones_like(array: InputTypes, dtype=None):
+def ones_like(array: InputTypes, dtype=None) -> Tensor:
 
     np_object = create_numpy_array(array)
 
