@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, NamedTuple, Callable
 import numpy as np
 
 from .utils import register_fn
@@ -8,34 +8,34 @@ from .utils import register_fn
 # Tensor: Fundamental unit of the framework to store data and all its properties.
 # Function: It is base class to store context (inputs and outputs) for each operation to compute the gradient.
 
-# Arrayable are all the types which could be converted to Tensors.
-Arrayable = Union[int, float, list, np.ndarray]
+# All the types which could be converted to Tensors.
+InputTypes = Union[int, float, list, np.ndarray]
 
 
 class Tensor:
-    def __init__(
-        self, data: Arrayable = None, requires_grad: bool = False, children=[]
-    ):
+    """
+    `Tensor` is a n-dimensional matrix to store floating-point data.
 
-        self.data = parseArrayable(data)
+    All computations are representated as a graphs and each tensor represents a node in the graph.
+
+
+    """
+
+    def __init__(
+        self,
+        data: InputTypes = None,
+        requires_grad: bool = False,
+        children: List["Tensor"] = [],
+    ) -> None:
+
+        self.data = create_numpy_array(data)
         self.children = children
         self.grad = None
         self.backward_fn = lambda: None
         self.requires_grad = requires_grad
 
-    def __repr__(self) -> str:
-        return f"<Tensor({self.data}, shape={self.shape})>"
-
-    @property
-    def shape(self):
-        if self.data.shape == ():
-            return (1,)
-        return self.data.shape
-
     def backward(self) -> None:
-        """
-        Creates a list of all the dependecies and iterates through each dependency to compute its local gradient.
-        """
+        """Initiates the gradient computation for the computational graph"""
 
         if self.requires_grad is False:
             raise RuntimeError(
@@ -60,12 +60,57 @@ class Tensor:
         for v in reversed(gradient_tape):
             v.backward_fn()
 
+    def tolist(self) -> List[float]:
+        """Returns tensor as a list"""
+        return self.data.tolist()
 
-def parseArrayable(object: Union[Arrayable, "Tensor"]):
+    @staticmethod
+    def ones_like(array: InputTypes, dtype=None) -> "Tensor":
+
+        np_object = create_numpy_array(array)
+
+        return Tensor(np.ones_like(np_object, dtype=dtype))
+
+    @staticmethod
+    def eye(rows: int, columns: int) -> "Tensor":
+        """Returns identity tensor
+
+        Parameters
+        ----------
+
+        Arg: rows (int)
+        Number of rows in the tensor
+
+        Arg: columns (int)
+        Number of columns in the tensor
+        """
+        return Tensor(np.eye(int(rows), int(columns)))
+
+    @property
+    def shape(self) -> Tuple:
+        """Returns the shape of the tensor"""
+
+        if self.data.shape == ():
+            return (1,)
+        return self.data.shape
+
+    @property
+    def ndim(self) -> int:
+        """Returns the rank of the tensor"""
+        return self.data.ndim
+
+    def __repr__(self) -> str:
+        return f"<Tensor({self.data}, shape={self.shape})>"
+
+
+def create_numpy_array(object: Union[InputTypes]) -> np.ndarray:
     """Checks if the object type is arrayable and returns the numpy array of the object
 
-    Args:
-    Object -- input provided by the user for a Tensor
+    Parameters
+    ----------
+
+    Arg: object (Union[List, int, float, np.ndarray])
+    Input to be converted to a numpy array
     """
 
     if object is None:
@@ -82,29 +127,54 @@ def parseArrayable(object: Union[Arrayable, "Tensor"]):
     return object
 
 
-def compute_grad(tensor, local_gradient, output_grad):
-    """Computes the gradient for the tensor given the output grad
+def create_tensors(inputs: Union[List[Tensor], InputTypes]) -> List[Tensor]:
+    """Creates and return a list of tensors from inputs"""
+    tensor_objects: List = list()
 
-    Args:
-    local_gradient: A parameter to pass the local gradient for an operation (addition, subtraction, ...)
+    for _input in inputs:
+        if not isinstance(_input, Tensor):
+            tensor_objects.append(Tensor(create_numpy_array(_input)))
+        else:
+            tensor_objects.append(_input)
 
+    return tensor_objects
+
+
+def compute_gradient(
+    tensor_object: Tensor,
+    local_gradient: Tensor,
+    output_grad: Tensor,
+) -> None:
+    """Computes the gradient for the tensor_object given the output grad
+
+    Parameters
+    ----------
+
+    Arg: tensor_object (Tensor)
+    Tensor for which the gradient is to be computed
+
+    Arg: local_gradient (Tensor)
+    Parameter to pass the local gradient of `tensor_object` for an operation (addition, subtraction, ...)
+
+    Arg: output_grad (Tensor)
+    Gradient of the output tensor, `tensor_object` gradient for the operation is computed w.r.t the `output_grad`
     """
 
-    if tensor.requires_grad:
+    if tensor_object.requires_grad:
 
-        if tensor.grad is None:
+        if tensor_object.grad is None:
             # Addresses the case when the data is a int or a float
-            if tensor.data.shape == ():
-                tensor.grad = Tensor(np.zeros_like(1))
+            if tensor_object.data.shape == ():
+                tensor_object.grad = Tensor(np.zeros_like(1))
             else:
-                tensor.grad = Tensor(np.zeros_like(tensor.data))
+                tensor_object.grad = Tensor(np.zeros_like(tensor_object.data))
 
         _gradient = output_grad * local_gradient
 
-        # Normalizes the rank of the tensor to that of the gradient
-        if tensor.grad.data.ndim < _gradient.data.ndim:
+        # Normalizes the rank of the tensor_object to that of the gradient
+        if tensor_object.grad.ndim < _gradient.ndim:
 
-            drop_dim: int = _gradient.data.ndim - tensor.grad.data.ndim
+            drop_dim: int = _gradient.ndim - tensor_object.grad.ndim
             for _ in range(drop_dim):
                 _gradient.data = _gradient.data.sum(axis=0)
 
@@ -112,24 +182,18 @@ def compute_grad(tensor, local_gradient, output_grad):
         # As we have already normalized the rank, we just sum over the dim while retaining dim
         # (2,3) + (1,3) => (2,3) :
         # (1,3) is broadcasted, so essentially we just have to sum over the _gradient along the dim which is equal to that of the child.
-        for i, dim in enumerate(tensor.data.shape):
+        for i, dim in enumerate(tensor_object.data.shape):
             if dim == 1:
                 _gradient.data = _gradient.data.sum(axis=i, keepdims=True)
 
-        tensor.grad += _gradient
+        tensor_object.grad += _gradient
 
 
 @register_fn(Tensor, "__add__")
-def add(a: Tensor, b: Tensor):
-    """
-    Returns the sum of input tensors with their local gradients
-    """
+def add(a: Tensor, b: Tensor) -> Tensor:
+    """Returns the sum of inputs with their local gradients"""
 
-    if not isinstance(a, Tensor):
-        a = Tensor(parseArrayable(a))
-
-    if not isinstance(b, Tensor):
-        b = Tensor(parseArrayable(b))
+    a, b = create_tensors([a, b])
 
     output = Tensor(
         a.data + b.data,
@@ -139,8 +203,8 @@ def add(a: Tensor, b: Tensor):
 
     def backward_fn():
 
-        compute_grad(a, Tensor(np.ones_like(a)), output.grad)
-        compute_grad(b, Tensor(np.ones_like(b)), output.grad)
+        compute_gradient(a, Tensor(np.ones_like(a)), output.grad)
+        compute_gradient(b, Tensor(np.ones_like(b)), output.grad)
 
     output.backward_fn = backward_fn
 
@@ -148,21 +212,15 @@ def add(a: Tensor, b: Tensor):
 
 
 @register_fn(Tensor, "__radd__")
-def radd(a: Union[int, float, list], b: Tensor):
+def radd(a: Union[int, float, list], b: Tensor) -> Tensor:
     return add(a, b)
 
 
 @register_fn(Tensor, "__sub__")
-def sub(a: Tensor, b: Tensor):
-    """
-    Returns the difference of input tensors with their local gradients
-    """
+def sub(a: Tensor, b: Tensor) -> Tensor:
+    """Returns the difference of inputs with their local gradients"""
 
-    if not isinstance(a, Tensor):
-        a = Tensor(parseArrayable(a))
-
-    if not isinstance(b, Tensor):
-        b = Tensor(parseArrayable(b))
+    a, b = create_tensors([a, b])
 
     output = Tensor(
         a.data - b.data,
@@ -172,8 +230,8 @@ def sub(a: Tensor, b: Tensor):
 
     def backward_fn():
 
-        compute_grad(a, Tensor(np.ones_like(a)), output.grad)
-        compute_grad(b, Tensor(-1 * np.ones_like(b)), output.grad)
+        compute_gradient(a, Tensor(np.ones_like(a)), output.grad)
+        compute_gradient(b, Tensor(-1 * np.ones_like(b)), output.grad)
 
     output.backward_fn = backward_fn
 
@@ -181,21 +239,15 @@ def sub(a: Tensor, b: Tensor):
 
 
 @register_fn(Tensor, "__rsub__")
-def rsub(a: Union[int, float, list], b: Tensor):
+def rsub(a: Union[int, float, list], b: Tensor) -> Tensor:
     return sub(a, b)
 
 
 @register_fn(Tensor, "__mul__")
-def mul(a: Tensor, b: Tensor):
-    """
-    Returns the product of input tensors with their local gradients
-    """
+def mul(a: Tensor, b: Tensor) -> Tensor:
+    """Returns the product of input tensor_objects with their local gradients"""
 
-    if not isinstance(a, Tensor):
-        a = Tensor(parseArrayable(a))
-
-    if not isinstance(b, Tensor):
-        b = Tensor(parseArrayable(b))
+    a, b = create_tensors([a, b])
 
     output = Tensor(
         a.data * b.data,
@@ -205,8 +257,8 @@ def mul(a: Tensor, b: Tensor):
 
     def backward_fn():
 
-        compute_grad(a, b, output.grad)
-        compute_grad(b, a, output.grad)
+        compute_gradient(a, b, output.grad)
+        compute_gradient(b, a, output.grad)
 
     output.backward_fn = backward_fn
 
@@ -214,34 +266,29 @@ def mul(a: Tensor, b: Tensor):
 
 
 @register_fn(Tensor, "__rmul__")
-def rmul(a: Union[List, int, float], b: Tensor):
+def rmul(a: Union[List, int, float], b: Tensor) -> Tensor:
     return (a, b)
 
 
 @register_fn(Tensor, "__pow__")
-def power(a: Tensor, pow: int):
+def power(a: Tensor, pow: int) -> Tensor:
 
-    if not isinstance(a, Tensor):
-        a = Tensor(parseArrayable(a))
+    [a] = create_tensors([a])
 
     output = Tensor(a.data ** (pow), requires_grad=a.requires_grad, children=[a])
 
     def backward_fn():
         operation_gradient = Tensor(pow * a.data ** (pow - 1))
-        compute_grad(a, operation_gradient, output.grad)
+        compute_gradient(a, operation_gradient, output.grad)
 
     output.backward_fn = backward_fn
     return output
 
 
 @register_fn(Tensor, "__truediv__")
-def div(a: Tensor, b: Tensor):
+def div(a: Tensor, b: Tensor) -> Tensor:
 
-    if not isinstance(a, Tensor):
-        a = Tensor(parseArrayable(a))
-
-    if not isinstance(b, Tensor):
-        b = Tensor(parseArrayable(b))
+    a, b = create_tensors([a, b])
 
     inv_b = power(b, -1)
 
@@ -253,8 +300,8 @@ def div(a: Tensor, b: Tensor):
 
     def backward_fn():
 
-        compute_grad(a, inv_b, output.grad)
-        compute_grad(inv_b, a, output.grad)
+        compute_gradient(a, inv_b, output.grad)
+        compute_gradient(inv_b, a, output.grad)
 
     output.backward_fn = backward_fn
 
@@ -262,12 +309,5 @@ def div(a: Tensor, b: Tensor):
 
 
 @register_fn(Tensor, "__rtruediv__")
-def rdiv(a: Union[List, int, float], b: Tensor):
+def rdiv(a: Union[List, int, float], b: Tensor) -> Tensor:
     return div(a, b)
-
-
-def ones_like(array: Arrayable, dtype=None):
-
-    np_object = parseArrayable(array)
-
-    return Tensor(np.ones_like(np_object, dtype=dtype))
