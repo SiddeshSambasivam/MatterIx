@@ -1,8 +1,5 @@
-from ast import parse
-from os import stat
 from typing import List, Tuple, Union
 import numpy as np
-from numpy.core.numeric import tensordot
 
 from .utils import register_fn
 
