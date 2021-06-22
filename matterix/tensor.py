@@ -8,16 +8,16 @@ from .utils import register_fn
 # Tensor: Fundamental unit of the framework to store data and all its properties.
 # Function: It is base class to store context (inputs and outputs) for each operation to compute the gradient.
 
-# Arrayable are all the types which could be converted to Tensors.
-Arrayable = Union[int, float, list, np.ndarray]
+# All the types which could be converted to Tensors.
+InputTypes = Union[int, float, list, np.ndarray]
 
 
 class Tensor:
     def __init__(
-        self, data: Arrayable = None, requires_grad: bool = False, children=[]
+        self, data: InputTypes = None, requires_grad: bool = False, children=[]
     ):
 
-        self.data = parseArrayable(data)
+        self.data = create_numpy_array(data)
         self.children = children
         self.grad = None
         self.backward_fn = lambda: None
@@ -61,7 +61,7 @@ class Tensor:
             v.backward_fn()
 
 
-def parseArrayable(object: Union[Arrayable, "Tensor"]):
+def create_numpy_array(object: Union[InputTypes, "Tensor"]):
     """Checks if the object type is arrayable and returns the numpy array of the object
 
     Args:
@@ -126,10 +126,10 @@ def add(a: Tensor, b: Tensor):
     """
 
     if not isinstance(a, Tensor):
-        a = Tensor(parseArrayable(a))
+        a = Tensor(create_numpy_array(a))
 
     if not isinstance(b, Tensor):
-        b = Tensor(parseArrayable(b))
+        b = Tensor(create_numpy_array(b))
 
     output = Tensor(
         a.data + b.data,
@@ -159,10 +159,10 @@ def sub(a: Tensor, b: Tensor):
     """
 
     if not isinstance(a, Tensor):
-        a = Tensor(parseArrayable(a))
+        a = Tensor(create_numpy_array(a))
 
     if not isinstance(b, Tensor):
-        b = Tensor(parseArrayable(b))
+        b = Tensor(create_numpy_array(b))
 
     output = Tensor(
         a.data - b.data,
@@ -192,10 +192,10 @@ def mul(a: Tensor, b: Tensor):
     """
 
     if not isinstance(a, Tensor):
-        a = Tensor(parseArrayable(a))
+        a = Tensor(create_numpy_array(a))
 
     if not isinstance(b, Tensor):
-        b = Tensor(parseArrayable(b))
+        b = Tensor(create_numpy_array(b))
 
     output = Tensor(
         a.data * b.data,
@@ -222,7 +222,7 @@ def rmul(a: Union[List, int, float], b: Tensor):
 def power(a: Tensor, pow: int):
 
     if not isinstance(a, Tensor):
-        a = Tensor(parseArrayable(a))
+        a = Tensor(create_numpy_array(a))
 
     output = Tensor(a.data ** (pow), requires_grad=a.requires_grad, children=[a])
 
@@ -238,10 +238,10 @@ def power(a: Tensor, pow: int):
 def div(a: Tensor, b: Tensor):
 
     if not isinstance(a, Tensor):
-        a = Tensor(parseArrayable(a))
+        a = Tensor(create_numpy_array(a))
 
     if not isinstance(b, Tensor):
-        b = Tensor(parseArrayable(b))
+        b = Tensor(create_numpy_array(b))
 
     inv_b = power(b, -1)
 
@@ -266,8 +266,8 @@ def rdiv(a: Union[List, int, float], b: Tensor):
     return div(a, b)
 
 
-def ones_like(array: Arrayable, dtype=None):
+def ones_like(array: InputTypes, dtype=None):
 
-    np_object = parseArrayable(array)
+    np_object = create_numpy_array(array)
 
     return Tensor(np.ones_like(np_object, dtype=dtype))
