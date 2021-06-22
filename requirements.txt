@@ -1,2 +1,10 @@
-numpy==1.19.1
-tqdm==4.48.0
+attrs==21.2.0
+certifi==2021.5.30
+iniconfig==1.1.1
+numpy==1.20.3
+packaging==20.9
+pluggy==0.13.1
+py==1.10.0
+pyparsing==2.4.7
+pytest==6.2.4
+toml==0.10.2

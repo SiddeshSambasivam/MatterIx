@@ -57,6 +57,10 @@ class Tensor:
         for v in reversed(gradient_tape):
             v.backward_fn()
 
+    def tolist(self) -> List[float]:
+        """Returns tensor as a list"""
+        return self.data.tolist()
+
     @staticmethod
     def ones_like(array: InputTypes, dtype=None) -> "Tensor":
 

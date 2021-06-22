@@ -1,6 +1,6 @@
+import math
 import unittest
 import numpy as np
-import torch
 from ..tensor import Tensor
 
 
@@ -75,19 +75,10 @@ class TestTensor(unittest.TestCase):
 
         d.backward()
 
-        at = torch.tensor([[1, 2], [1, 2]], dtype=torch.float32, requires_grad=True)
-        bt = torch.tensor([[1, 2], [1, 2]], dtype=torch.float32, requires_grad=True)
-        ct = at + bt
-        ct.retain_grad()
-        dt = ct * at
-        dt.retain_grad()
-
-        dt.backward(gradient=torch.ones_like(dt))
-
-        assert np.array_equal(at.grad.numpy(), a.grad.data) == True
-        assert np.array_equal(bt.grad.numpy(), b.grad.data) == True
-        assert np.array_equal(ct.grad.numpy(), c.grad.data) == True
-        assert np.array_equal(dt.grad.numpy(), d.grad.data) == True
+        assert a.grad.tolist() == [[3, 6], [3, 6]]
+        assert b.grad.tolist() == [[1, 2], [1, 2]]
+        assert c.grad.tolist() == [[1, 2], [1, 2]]
+        assert d.grad.tolist() == [[1, 1], [1, 1]]
 
     # @unittest.skip("Under development")
     def test_broadcasting(self):
@@ -101,21 +92,10 @@ class TestTensor(unittest.TestCase):
 
         d.backward()
 
-        at = torch.tensor(
-            [[1, 2, 3], [1, 2, 3]], dtype=torch.float32, requires_grad=True
-        )
-        bt = torch.tensor([[1]], dtype=torch.float32, requires_grad=True)
-        ct = at + bt
-        ct.retain_grad()
-        dt = ct * at
-        dt.retain_grad()
-
-        dt.backward(gradient=torch.ones_like(dt))
-
-        assert np.array_equal(at.grad.numpy(), a.grad.data) == True
-        assert np.array_equal(bt.grad.numpy(), b.grad.data) == True
-        assert np.array_equal(ct.grad.numpy(), c.grad.data) == True
-        assert np.array_equal(dt.grad.numpy(), d.grad.data) == True
+        assert a.grad.tolist() == [[3, 5, 7], [3, 5, 7]]
+        assert b.grad.tolist() == [[12]]
+        assert c.grad.tolist() == [[1, 2, 3], [1, 2, 3]]
+        assert d.grad.tolist() == [[1, 1, 1], [1, 1, 1]]
 
     # @unittest.skip("Under development")
     def test_singular(self):
@@ -129,21 +109,10 @@ class TestTensor(unittest.TestCase):
 
         d.backward()
 
-        at = torch.tensor(
-            [[1, 2, 3], [1, 2, 3]], dtype=torch.float32, requires_grad=True
-        )
-        bt = torch.tensor(1, dtype=torch.float32, requires_grad=True)
-        ct = at + bt
-        ct.retain_grad()
-        dt = ct * at
-        dt.retain_grad()
-
-        dt.backward(gradient=torch.ones_like(dt))
-
-        assert np.array_equal(at.grad.numpy(), a.grad.data) == True
-        assert np.array_equal(bt.grad.numpy(), b.grad.data) == True
-        assert np.array_equal(ct.grad.numpy(), c.grad.data) == True
-        assert np.array_equal(dt.grad.numpy(), d.grad.data) == True
+        assert a.grad.tolist() == [[3, 5, 7], [3, 5, 7]]
+        assert b.grad.tolist() == 12.0
+        assert c.grad.tolist() == [[1, 2, 3], [1, 2, 3]]
+        assert d.grad.tolist() == [[1, 1, 1], [1, 1, 1]]
 
     # @unittest.skip("Under development")
     def test_ones_like(self):
@@ -158,17 +127,12 @@ class TestTensor(unittest.TestCase):
 
     def test_div(self):
 
-        a = Tensor(1, requires_grad=True)
-        b = Tensor(2, requires_grad=True)
+        a = Tensor(0.154, requires_grad=True)
+        b = Tensor(1.565, requires_grad=True)
         res = (a / b - a) * b
 
         res.backward()
 
-        at = torch.tensor(1.0, requires_grad=True)
-        bt = torch.tensor(2.0, requires_grad=True)
-        res_t = (at / bt - at) * bt
-        res_t.backward()
-
-        assert res_t.tolist() == res.data.tolist()
-        assert at.grad.tolist() == a.grad.data.tolist()
-        assert bt.grad.tolist() == b.grad.data.tolist()
+        assert math.isclose(res.data.tolist(), -0.0870, rel_tol=0.01) == True
+        assert math.isclose(a.grad.tolist(), -0.5650, rel_tol=0.01) == True
+        assert math.isclose(b.grad.tolist(), -0.1540, rel_tol=0.01) == True
