@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union, NamedTuple, Callable
+from typing import List, Tuple, Union
 import numpy as np
 
 from .utils import register_fn
@@ -17,8 +17,7 @@ class Tensor:
     `Tensor` is a n-dimensional matrix to store floating-point data.
 
     All computations are representated as a graphs and each tensor represents a node in the graph.
-
-
+    Gradients for tensors are computed using reverse-mode automatic differentiation.
     """
 
     def __init__(
