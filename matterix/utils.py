@@ -1,7 +1,7 @@
 from functools import wraps
 
 
-def register_fn(cls, fn_name):
+def registerFn(cls, fn_name):
     """Decorator to add function dynamically to a class"""
 
     def decorator(func):
@@ -15,7 +15,7 @@ def register_fn(cls, fn_name):
     return decorator
 
 
-def not_working(func):
+def underDevelopment(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         raise NotImplementedError("Function still under development")
