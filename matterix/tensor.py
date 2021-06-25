@@ -59,9 +59,18 @@ class Tensor:
         for v in reversed(gradient_tape):
             v.backward_fn()
 
+    def matmul(self, a) -> "Tensor":
+        return matmul(self, a)
+
+    def item(self):
+        return self.data
+
     def tolist(self) -> List[float]:
         """Returns tensor as a list"""
         return self.data.tolist()
+
+    def zero_grad(self) -> None:
+        self.grad = Tensor(np.zeros_like(self.data))
 
     @staticmethod
     def ones_like(array: InputTypes, dtype=None) -> "Tensor":
@@ -87,11 +96,17 @@ class Tensor:
 
     @property
     def T(self) -> None:
-        # self.data = self.data.T
-        output = self
-        output.data = output.data.T
+
+        output = Tensor(self.data.T, requires_grad=self.requires_grad, children=[self])
+
+        def backward_fn():
+
+            local_gradient = Tensor(output.data.T)
+            compute_gradient(self, local_gradient)
+
+        output.backward_fn = backward_fn
+
         return output
-        # Tensor(self.data.T, self)
 
     @property
     def shape(self) -> Tuple:
@@ -105,6 +120,13 @@ class Tensor:
     def ndim(self) -> int:
         """Returns the rank of the tensor"""
         return self.data.ndim
+
+    def __isub__(self, object: "Tensor") -> None:
+
+        [object] = create_tensors([object])
+        self.data = self.data - object.data
+
+        return self
 
     def __repr__(self) -> str:
         return f"<Tensor({self.data}, shape={self.shape})>"
@@ -190,9 +212,6 @@ def compute_gradient(
             if dim == 1:
                 _gradient.data = _gradient.data.sum(axis=i, keepdims=True)
 
-        # assert (
-        # tensor_object.grad.shape == _gradient.shape
-        # ), f"Shape of gradient does not match: Var: {tensor_object.grad}\tGrad: {_gradient}"
         tensor_object.grad += _gradient
 
 
@@ -281,7 +300,7 @@ def mul(a: Tensor, b: Tensor) -> Tensor:
 
 @register_fn(Tensor, "__rmul__")
 def rmul(a: Union[List, int, float], b: Tensor) -> Tensor:
-    return (a, b)
+    return mul(a, b)
 
 
 @register_fn(Tensor, "__pow__")
@@ -340,14 +359,19 @@ def transpose(a: Tensor):
 
 
 @register_fn(Tensor, "__matmul__")
-# @not_working
 def matmul(a: Tensor, b: Tensor) -> Tensor:
     """Return result of matrix multiplication of the inputs"""
 
     a, b = create_tensors([a, b])
 
-    # print(f"Shape of a: {a.shape}\t Shape of b: {b.shape} and result= {a.data@b.data}")
-    data = a.data @ b.data
+    try:
+        data = a.data @ b.data
+    except ValueError:
+
+        raise RuntimeError(
+            f"Inconsistent tensor size for the operation. {a.shape} x {b.shape} != (m,n) x (n,k)"
+        )
+
     output = Tensor(
         data=data,
         requires_grad=(a.requires_grad or b.requires_grad),
@@ -361,7 +385,27 @@ def matmul(a: Tensor, b: Tensor) -> Tensor:
 
         compute_gradient(a, a_local_gradient)
         compute_gradient(b, b_local_gradient)
-        pass
+
+    output.backward_fn = backward_fn
+
+    return output
+
+
+@register_fn(Tensor, "sum")
+# @not_working
+def sum(a: Tensor) -> float:
+
+    # print("Problem", a)
+    # if type(a) is not Tensor:
+    [a] = create_tensors([a])
+    # print("Not here in create tensors")
+
+    output = Tensor(data=a.data.sum(), requires_grad=a.requires_grad, children=[a])
+
+    def backward_fn():
+
+        local_gradient = output.grad * Tensor(np.ones_like(a.data))
+        compute_gradient(a, local_gradient)
 
     output.backward_fn = backward_fn
 
