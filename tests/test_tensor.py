@@ -49,7 +49,7 @@ class TestTensor(unittest.TestCase):
         assert bt.grad == None
 
     # @unittest.skip("Under development")
-    def test_mul(self):
+    def test_mul1(self):
         """Test multiplication operation of a Tensor"""
 
         at = Tensor([2, 2, 2], requires_grad=True)
@@ -61,6 +61,26 @@ class TestTensor(unittest.TestCase):
         assert mul_t.data.tolist() == [6, 6, 6]
         assert at.grad.data.tolist() == [3, 3, 3]
         assert bt.grad.data.tolist() == [2, 2, 2]
+
+    def test_mul2(self):
+
+        b = Tensor([[1, 2, 3], [1, 2, 3], [1, 2, 3]], requires_grad=True)
+
+        res = 2 * b
+        res.backward()
+
+        assert res.tolist() == [[2, 4, 6], [2, 4, 6], [2, 4, 6]]
+
+    def test_mul3(self):
+
+        x = Tensor([10, -10, 10, -5, 6, 3, 1], requires_grad=True)
+
+        sum_of_sqr = x * x
+
+        sum_of_sqr.backward()
+
+        assert sum_of_sqr.tolist() == [100.0, 100.0, 100.0, 25.0, 36.0, 9.0, 1.0]
+        assert x.grad.tolist() == [20.0, -20.0, 20.0, -10.0, 12.0, 6.0, 2.0]
 
     # @unittest.skip("Under development")
     def test_grad_simple(self):
@@ -141,7 +161,7 @@ class TestTensor(unittest.TestCase):
         assert math.isclose(b.grad.tolist(), -0.1540, rel_tol=0.01) == True
 
     # @unittest.skip("Under development")
-    def test_matmul(self):
+    def test_matmul1(self):
 
         a = Tensor([[1, 2], [1, 2]], requires_grad=True)
         b = Tensor([[1, 2, 3], [1, 2, 3]], requires_grad=True)
@@ -153,3 +173,31 @@ class TestTensor(unittest.TestCase):
         assert result.grad.tolist() == [[1, 1, 1], [1, 1, 1]]
         assert a.grad.tolist() == [[6, 6], [6, 6]]
         assert b.grad.tolist() == [[2, 2, 2], [4, 4, 4]]
+
+    def test_matmul2(self):
+        def _testTypeError():
+            a = Tensor([1, 2, 3, 4])
+            b = Tensor([1, 2, 3, 4, 5, 6])
+
+            result = a @ b
+
+        with self.assertRaises(RuntimeError):
+            _testTypeError()
+
+    # @unittest.skip("Under development")
+    def test_sum(self):
+
+        x = Tensor([10, -10, 10, -5, 6, 3, 1], requires_grad=True)
+        for i in range(4):
+
+            x.zero_grad()
+
+            sum_of_sqr = (x * x).sum()  # is a 0-tensor
+
+            if i == 0:
+                assert sum_of_sqr.tolist() == 371.0
+
+            sum_of_sqr.backward()
+
+            delta_x = 0.1 * x.grad
+            x -= delta_x
