@@ -13,7 +13,6 @@ class TestTensorAdd(unittest.TestCase):
         sum_t = at + bt
 
         sum_t.backward(gradient=Tensor.ones_like(sum_t))
-        # print(sum_t)
 
         assert sum_t.data.tolist() == [4, 6]
         assert sum_t.grad.data.tolist() == [1, 1]
@@ -37,6 +36,8 @@ class TestTensorAdd(unittest.TestCase):
         result = 1.0 + at
 
         result.backward(gradient=Tensor.ones_like(result))
+
+        assert result.tolist() == (1.0 + an).tolist()
         assert at.grad.tolist() == np.ones_like(an).tolist()
 
     def test_type_error(self):

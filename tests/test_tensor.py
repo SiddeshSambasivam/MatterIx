@@ -35,41 +35,6 @@ class TestTensorAssignment(unittest.TestCase):
 
 
 # class TestTensorOps(unittest.TestCase):
-#     @unittest.skip("Under development")
-#     def test_mul1(self):
-#         """Test multiplication operation of a Tensor"""
-
-#         at = Tensor([2, 2, 2], requires_grad=True)
-#         bt = Tensor([3, 3, 3], requires_grad=True)
-#         mul_t = at * bt
-
-#         mul_t.backward()
-
-#         assert mul_t.data.tolist() == [6, 6, 6]
-#         assert at.grad.data.tolist() == [3, 3, 3]
-#         assert bt.grad.data.tolist() == [2, 2, 2]
-
-#     @unittest.skip("Under development")
-#     def test_mul2(self):
-
-#         b = Tensor([[1, 2, 3], [1, 2, 3], [1, 2, 3]], requires_grad=True)
-
-#         res = 2 * b
-#         res.backward()
-
-#         assert res.tolist() == [[2, 4, 6], [2, 4, 6], [2, 4, 6]]
-
-#     @unittest.skip("Under development")
-#     def test_mul3(self):
-
-#         x = Tensor([10, -10, 10, -5, 6, 3, 1], requires_grad=True)
-
-#         sum_of_sqr = x * x
-
-#         sum_of_sqr.backward()
-
-#         assert sum_of_sqr.tolist() == [100.0, 100.0, 100.0, 25.0, 36.0, 9.0, 1.0]
-#         assert x.grad.tolist() == [20.0, -20.0, 20.0, -10.0, 12.0, 6.0, 2.0]
 
 #     @unittest.skip("Under development")
 #     def test_grad_simple(self):

@@ -154,16 +154,6 @@ class Tensor:
         """Returns tensor as a list"""
         return self.data.tolist()
 
-    # def zero_grad(self) -> None:
-    #     self.grad = Tensor(np.zeros_like(self.data))
-
-    # @staticmethod
-    # def ones_like(array: ArrayableType, dtype=None) -> "Tensor":
-
-    #     np_object = create_numpy_array(array)
-
-    #     return Tensor(np.ones_like(np_object, dtype=dtype))
-
     @staticmethod
     def eye(rows: int, columns: int) -> "Tensor":
         """Returns identity tensor
@@ -307,64 +297,6 @@ def compute_gradient(
         tensor_object.grad += _gradient
 
 
-@registerFn(Tensor, "__sub__")
-def sub(a: Tensor, b: Tensor) -> Tensor:
-    """Returns the difference of inputs with their local gradients"""
-
-    a, b = create_tensors([a, b])
-
-    output = Tensor(
-        a.data - b.data,
-        children=[a, b],
-        requires_grad=(a.requires_grad or b.requires_grad),
-    )
-
-    def backward_fn():
-
-        a_local_gradient = output.grad * Tensor(np.ones_like(a))
-        b_local_gradient = output.grad * Tensor(-1 * np.ones_like(b))
-        compute_gradient(a, a_local_gradient)
-        compute_gradient(b, b_local_gradient)
-
-    output.backward_fn = backward_fn
-
-    return output
-
-
-@registerFn(Tensor, "__rsub__")
-def rsub(a: Union[int, float, list], b: Tensor) -> Tensor:
-    return sub(a, b)
-
-
-@registerFn(Tensor, "__mul__")
-def mul(a: Tensor, b: Tensor) -> Tensor:
-    """Returns the product of input tensor_objects with their local gradients"""
-
-    a, b = create_tensors([a, b])
-
-    output = Tensor(
-        a.data * b.data,
-        children=[a, b],
-        requires_grad=(a.requires_grad or b.requires_grad),
-    )
-
-    def backward_fn():
-
-        a_local_gradient = output.grad * b
-        b_local_gradient = output.grad * a
-        compute_gradient(a, a_local_gradient)
-        compute_gradient(b, b_local_gradient)
-
-    output.backward_fn = backward_fn
-
-    return output
-
-
-@registerFn(Tensor, "__rmul__")
-def rmul(a: Union[List, int, float], b: Tensor) -> Tensor:
-    return mul(a, b)
-
-
 @registerFn(Tensor, "__pow__")
 def power(a: Tensor, pow: int) -> Tensor:
 
@@ -451,36 +383,3 @@ def matmul(a: Tensor, b: Tensor) -> Tensor:
     output.backward_fn = backward_fn
 
     return output
-
-
-# @registerFn(Tensor, "sum")
-# # @underDevelopment
-# def sum(a: Tensor) -> float:
-
-#     # print("Problem", a)
-#     if type(a) is not Tensor:
-#         [a] = create_tensors([a])
-#     # print("Not here in create tensors")
-
-#     output = Tensor(data=a.data.sum(), requires_grad=a.requires_grad, children=[a])
-
-#     def backward_fn():
-
-#         if a.requires_grad:
-
-#             if a.grad is None:
-#                 # Addresses the case when the data is a int or a float
-#                 if a.data.shape == ():
-#                     a.grad = Tensor(np.zeros_like(1))
-#                 else:
-#                     a.grad = Tensor(np.zeros_like(a.data))
-
-#             local_gradient = output.grad * Tensor(np.ones_like(a.data))
-
-#             a.grad += local_gradient
-#         # compute_gradient(a, local_gradient)
-
-#     output.backward_fn = backward_fn
-#     # print("Printing the output for sum: ", output)
-
-#     return output

@@ -1,6 +1,6 @@
 from typing import Tuple, Union
 import numpy as np
-from .tensor import Tensor, enforceTensor, compute_gradient
+from .tensor import Tensor, enforceTensor, compute_gradient, TensorableType
 from .utils import registerFn
 
 
@@ -71,12 +71,84 @@ def add(a: Tensor, b: Tensor) -> Tensor:
 
 
 @registerFn(Tensor, "__radd__")
-def radd(a: Union[int, float, list], b: Tensor) -> Tensor:
-    return add(a, b)
+def radd(a: TensorableType, b: TensorableType) -> Tensor:
+    return add(b, a)
+
+
+@registerFn(Tensor, "__sub__")
+def sub(a: Tensor, b: Tensor) -> Tensor:
+    """Returns the difference of inputs with their local gradients"""
+
+    a = enforceTensor(a)
+    b = enforceTensor(b)
+
+    output = Tensor(a.data - b.data, requires_grad=(a.requires_grad or b.requires_grad))
+    output.save_for_backward([a, b])
+
+    def backward_fn():
+
+        if a.requires_grad:
+
+            a_local_gradient = output.grad.data * np.ones_like(a.data)
+            a_local_gradient = manageBroadcasting(a.ndim, a.shape, a_local_gradient)
+
+            a.grad.data += a_local_gradient
+
+        if b.requires_grad:
+
+            b_local_gradient = output.grad.data * -1.0 * np.ones_like(b.data)
+            b_local_gradient = manageBroadcasting(b.ndim, b.shape, b_local_gradient)
+
+            b.grad.data += b_local_gradient
+
+    output.backward_fn = backward_fn
+
+    return output
+
+
+@registerFn(Tensor, "__rsub__")
+def rsub(a: TensorableType, b: TensorableType) -> Tensor:
+    return sub(b, a)
+
+
+@registerFn(Tensor, "__mul__")
+def mul(a: TensorableType, b: TensorableType) -> Tensor:
+    """Returns the product of input tensor_objects with their local gradients"""
+
+    a = enforceTensor(a)
+    b = enforceTensor(b)
+
+    output = Tensor(a.data * b.data, requires_grad=(a.requires_grad or b.requires_grad))
+    output.save_for_backward([a, b])
+
+    def backward_fn():
+
+        if a.requires_grad:
+
+            a_local_gradient = output.grad.data * b.data
+            a_local_gradient = manageBroadcasting(a.ndim, a.shape, a_local_gradient)
+
+            a.grad.data += a_local_gradient
+
+        if b.requires_grad:
+
+            b_local_gradient = output.grad.data * a.data
+            b_local_gradient = manageBroadcasting(b.ndim, b.shape, b_local_gradient)
+
+            b.grad.data += b_local_gradient
+
+    output.backward_fn = backward_fn
+
+    return output
+
+
+@registerFn(Tensor, "__rmul__")
+def rmul(a: TensorableType, b: TensorableType) -> Tensor:
+    return mul(b, a)
 
 
 @registerFn(Tensor, "sum")
-def sum(a: Tensor):
+def sum(a: TensorableType):
 
     a = enforceTensor(a)
 
