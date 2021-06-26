@@ -3,20 +3,23 @@ import numpy as np
 from .tensor import Tensor, enforceTensor, compute_gradient
 from .utils import registerFn
 
-# Utility functions
-
-
-def isTensor(x: Tensor) -> bool:
-    if isinstance(x, Tensor):
-        return True
-
-    return False
-
 
 def manageBroadcasting(
     input_ndim: int, input_shape: Tuple[int], output: np.ndarray
 ) -> np.ndarray:
-    """Handles broadcasting issue when computing gradients"""
+    """Handles broadcasting issue when computing gradients
+
+    Parameters
+    ----------
+    Arg: input_ndim
+    Rank of the tensor for which the gradient is being computed
+
+    Arg: input_shape
+    Shape of the tensor for gradient calculation
+
+    Arg: output
+    Result of some operation with input tensor
+    """
 
     drop_dim: int = output.ndim - input_ndim
 
