@@ -20,3 +20,7 @@ class TestTensorSum(unittest.TestCase):
 
         assert b.grad.tolist() == 1.0
         assert a.grad.tolist() == [1, 1, 1, 1]
+
+        a.zero_grad()
+
+        assert a.grad.tolist() == [0, 0, 0, 0]

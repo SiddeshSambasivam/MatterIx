@@ -1,17 +1,18 @@
 from typing import Text
 import unittest
+from unittest.case import TestCase
 from matterix import Tensor
 import numpy as np
 
 
 class TestTensorAdd(unittest.TestCase):
-    def test_simple_add(self):
+    def test_simple_add1(self):
 
         at = Tensor([1, 2], requires_grad=True)
         bt = Tensor([3, 4], requires_grad=True)
         sum_t = at + bt
 
-        sum_t.backward(gradient=np.ones_like(sum_t.data))
+        sum_t.backward(gradient=Tensor.ones_like(sum_t))
         # print(sum_t)
 
         assert sum_t.data.tolist() == [4, 6]
@@ -19,7 +20,24 @@ class TestTensorAdd(unittest.TestCase):
         assert at.grad.data.tolist() == [1, 1]
         assert bt.grad.data.tolist() == [1, 1]
 
-        # assert (1 + at).data.tolist() == [2, 3]
+    def test_simple_add2(self):
+
+        an = np.random.randint(0, 10, (1000, 1000))
+        bn = np.random.randint(0, 10, (1000, 1000))
+
+        at = Tensor(an)
+        bt = Tensor(bn)
+
+        assert (at + bt).tolist() == (an + bn).tolist()
+
+    def test_radd(self):
+
+        an = np.random.randint(0, 200, (100, 100))
+        at = Tensor(an, requires_grad=True)
+        result = 1.0 + at
+
+        result.backward(gradient=Tensor.ones_like(result))
+        assert at.grad.tolist() == np.ones_like(an).tolist()
 
     def test_type_error(self):
         def _typeErrorFn():
