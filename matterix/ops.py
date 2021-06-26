@@ -215,6 +215,8 @@ def pow(a: TensorableType, pow: int) -> Tensor:
 def matmul(a: TensorableType, b: TensorableType) -> Tensor:
     """Return result of matrix multiplication of the inputs"""
 
+    # When multiplying 1-tensor it results in an error
+
     a = enforceTensor(a)
     b = enforceTensor(b)
 

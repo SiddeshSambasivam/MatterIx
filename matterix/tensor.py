@@ -91,6 +91,18 @@ class Tensor:
         """Returns tensor as a list"""
         return self.data.tolist()
 
+    def numel(self) -> int:
+        """Returns the number of elements in a tensor
+
+        Example
+        -------
+        >> a = Tensor([[1,2,3], [4,5,6], [7,8,9]])
+        >> a.shape
+        (3,3)
+        >> a.numel() # 9, as there are 9 elements in the tensor
+        9
+        """
+
     @staticmethod
     def zeros_like(x: ArrayableType) -> "Tensor":
         if isinstance(x, Tensor):
@@ -136,9 +148,4 @@ class Tensor:
         return self.data.ndim
 
     def __repr__(self) -> str:
-        if self.backward_fn() is None:
-            return f"Tensor({self.data}, shape={self.shape})"
-        else:
-            return (
-                f"Tensor({self.data}, grad_fn={self.backward_fn}, shape={self.shape})"
-            )
+        return f"Tensor({self.data}, shape={self.shape})"
