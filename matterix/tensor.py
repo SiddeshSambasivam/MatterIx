@@ -32,7 +32,7 @@ def enforceNumpy(_input: ArrayableType, dtype=np.float32) -> np.ndarray:
     if not isinstance(_input, np.ndarray):
         if type(_input) in [list, float, np.float32]:
             return np.array(_input, dtype=dtype)
-
+        print("Type of the var: ", type(_input), _input)
         raise ValueError("Tensor only accepts float, list and numpy array as data.")
 
     _input = _input.astype(dtype)
@@ -126,7 +126,7 @@ class Tensor:
                 )
             self.grad = enforceTensor(gradient)
         else:
-            self.grad = Tensor.ones_like(1)
+            self.grad = Tensor.ones_like(1.0)
 
         gradient_tape = list()
         visited = set()
@@ -154,15 +154,15 @@ class Tensor:
         """Returns tensor as a list"""
         return self.data.tolist()
 
-    def zero_grad(self) -> None:
-        self.grad = Tensor(np.zeros_like(self.data))
+    # def zero_grad(self) -> None:
+    #     self.grad = Tensor(np.zeros_like(self.data))
 
-    @staticmethod
-    def ones_like(array: ArrayableType, dtype=None) -> "Tensor":
+    # @staticmethod
+    # def ones_like(array: ArrayableType, dtype=None) -> "Tensor":
 
-        np_object = create_numpy_array(array)
+    #     np_object = create_numpy_array(array)
 
-        return Tensor(np.ones_like(np_object, dtype=dtype))
+    #     return Tensor(np.ones_like(np_object, dtype=dtype))
 
     @staticmethod
     def eye(rows: int, columns: int) -> "Tensor":
