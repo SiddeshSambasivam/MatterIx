@@ -56,22 +56,6 @@ class TestTensorAssignment(unittest.TestCase):
 #         assert c.grad.tolist() == [[1, 2], [1, 2]]
 #         assert d.grad.tolist() == [[1, 1], [1, 1]]
 
-#     @unittest.skip("Under development")
-#     def test_broadcasting(self):
-
-#         a = Tensor([[1, 2, 3], [1, 2, 3]], requires_grad=True)
-
-#         b = Tensor([[1]], requires_grad=True)
-
-#         c = a + b
-#         d = c * a
-
-#         d.backward()
-
-#         assert a.grad.tolist() == [[3, 5, 7], [3, 5, 7]]
-#         assert b.grad.tolist() == [[12]]
-#         assert c.grad.tolist() == [[1, 2, 3], [1, 2, 3]]
-#         assert d.grad.tolist() == [[1, 1, 1], [1, 1, 1]]
 
 #     @unittest.skip("Under development")
 #     def test_singular(self):

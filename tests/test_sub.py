@@ -28,3 +28,17 @@ class TestTensorSub(unittest.TestCase):
 
         assert result.tolist() == (1.0 - an).tolist()
         assert at.grad.tolist() == (-1.0 * np.ones_like(an)).tolist()
+
+    def test_broadcast_sub(self):
+
+        a = Tensor([[1, 2, 3], [1, 2, 3]], requires_grad=True)
+
+        b = Tensor(1.0, requires_grad=True)
+
+        c = a - b
+
+        c.backward(gradient=Tensor.ones_like(c))
+
+        assert a.grad.tolist() == [[1, 1, 1], [1, 1, 1]]
+        assert b.grad.tolist() == -6.0
+        assert c.grad.tolist() == [[1, 1, 1], [1, 1, 1]]
