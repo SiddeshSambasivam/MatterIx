@@ -85,43 +85,6 @@ class TestTensorAssignment(unittest.TestCase):
 #         assert output_1.data.tolist() == [1.0, 1.0, 1.0]
 #         assert output_2.data.tolist() == 1
 
-#     @unittest.skip("Under development")
-#     def test_div(self):
-
-#         a = Tensor(0.154, requires_grad=True)
-#         b = Tensor(1.565, requires_grad=True)
-#         res = (a / b - a) * b
-
-#         res.backward()
-
-#         assert math.isclose(res.data.tolist(), -0.0870, rel_tol=0.01) == True
-#         assert math.isclose(a.grad.tolist(), -0.5650, rel_tol=0.01) == True
-#         assert math.isclose(b.grad.tolist(), -0.1540, rel_tol=0.01) == True
-
-#     @unittest.skip("Under development")
-#     def test_matmul1(self):
-
-#         a = Tensor([[1, 2], [1, 2]], requires_grad=True)
-#         b = Tensor([[1, 2, 3], [1, 2, 3]], requires_grad=True)
-
-#         result = a @ b
-#         result.backward()
-
-#         assert result.tolist() == [[3, 6, 9], [3, 6, 9]]
-#         assert result.grad.tolist() == [[1, 1, 1], [1, 1, 1]]
-#         assert a.grad.tolist() == [[6, 6], [6, 6]]
-#         assert b.grad.tolist() == [[2, 2, 2], [4, 4, 4]]
-
-#     @unittest.skip("under development")
-#     def test_matmul2(self):
-#         def _testTypeError():
-#             a = Tensor([1, 2, 3, 4])
-#             b = Tensor([1, 2, 3, 4, 5, 6])
-
-#             result = a @ b
-
-#         with self.assertRaises(RuntimeError):
-#             _testTypeError()
 
 #     @unittest.skip("Under development")
 #     def test_sum(self):
