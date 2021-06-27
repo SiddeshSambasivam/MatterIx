@@ -4,6 +4,7 @@
 <p align="center">
     <img alt="PyPI - License" src="https://img.shields.io/pypi/l/Matterix">
     <img alt="PyPI" src="https://img.shields.io/pypi/v/Matterix">
+    <img alt="PyPI - Wheel" src="https://img.shields.io/pypi/wheel/MatterIx">
 </p>
 
 <p align="center">
