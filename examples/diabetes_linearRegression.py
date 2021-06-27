@@ -19,6 +19,7 @@ b2 = Tensor(np.random.randn(1), requires_grad=True)
 def model(x):
 
     out_1 = (x @ w1) + b1
+
     output = (out_1 @ w2) + b2
 
     return output

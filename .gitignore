@@ -144,3 +144,4 @@ cython_debug/
 # Development notebooks
 /*.ipynb
 *.gz
+test.py
