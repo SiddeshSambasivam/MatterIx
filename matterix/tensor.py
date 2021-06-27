@@ -4,6 +4,8 @@ import numpy as np
 ArrayableType = Union[float, list, np.ndarray]
 TensorableType = Union[float, np.ndarray, "Tensor"]
 
+# TODO: randn, normal, randint
+
 
 def enforceTensor(_input: TensorableType) -> "Tensor":
     """Converts input to tensor. This is called whenever an operation is performed"""
@@ -13,7 +15,7 @@ def enforceTensor(_input: TensorableType) -> "Tensor":
         return Tensor(_input)
 
 
-def enforceNumpy(_input: ArrayableType, dtype=np.float32) -> np.ndarray:
+def enforceNumpy(_input: ArrayableType, dtype=np.float64) -> np.ndarray:
     """Converts the input to numpy array. This is called only during input validation"""
 
     if _input is None:
@@ -31,17 +33,33 @@ def enforceNumpy(_input: ArrayableType, dtype=np.float32) -> np.ndarray:
 
 class Tensor:
     """
-    `Tensor` is a n-dimensional matrix to store floating-point data.
+    `Tensor` is a n-dimensional matrix to store floating-point (np.float32 or np.float16) data, compute gradients and perform basic operations.
 
-    All computations are representated as a graphs and each tensor represents a node in the graph.
-    Gradients for tensors are computed using reverse-mode automatic differentiation.
+
+    Attributes
+    ----------
+
+    data: numpy.ndarray
+        stores the floating point data as a numpy array
+
+    ctx: List[Tensor]
+        list of all the operand tensors which resulted to this tensor
+
+    grad: Tensor
+        Stores the gradient for the tensor
+
+    backward_fn: Callable[[], None]
+        reference to the function to calculate the gradient for the operand tensors
+
+    requires_grad: bool
+        enforces if gradient needs to be computed for this tensor
 
     """
 
     def __init__(self, data: ArrayableType, requires_grad: bool = False) -> None:
 
         self.data = enforceNumpy(data)
-        self.ctx = []
+        self.ctx: List["Tensor"] = []
         self.grad = Tensor(np.zeros_like(self.data)) if requires_grad == True else None
         self.backward_fn = lambda: None
         self.requires_grad = requires_grad
@@ -54,7 +72,18 @@ class Tensor:
         self.ctx += inputs
 
     def backward(self, gradient: "Tensor" = None) -> None:
-        """Initiates the gradient computation for the computational graph"""
+        """Traverses through the computational graph to compute gradients
+
+        The reverse-mode automatic differentiation is used to compute the gradient for all the tensors.
+        Any computation performed is represented as a graph with all each tensor in computation as a node.
+
+        Parameters
+        ----------
+
+        Arg: gradient (Tensor)
+            Gradient of the output tensor w.r.t to itself
+
+        """
 
         if self.requires_grad is False:
             raise RuntimeError(
@@ -96,12 +125,18 @@ class Tensor:
 
         Example
         -------
+
         >> a = Tensor([[1,2,3], [4,5,6], [7,8,9]])
         >> a.shape
         (3,3)
         >> a.numel() # 9, as there are 9 elements in the tensor
         9
         """
+        _product = 1
+        for dim in self.shape:
+            _product *= dim
+
+        return _product
 
     @staticmethod
     def zeros_like(x: ArrayableType) -> "Tensor":
@@ -127,10 +162,11 @@ class Tensor:
         ----------
 
         Arg: rows (int)
-        Number of rows in the tensor
+            Number of rows in the tensor
 
         Arg: columns (int)
-        Number of columns in the tensor
+            Number of columns in the tensor
+
         """
         return Tensor(np.eye(int(rows), int(columns)))
 
