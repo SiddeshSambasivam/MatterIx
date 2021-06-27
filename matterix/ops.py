@@ -14,14 +14,16 @@ def manageBroadcasting(
 
     Parameters
     ----------
+
     Arg: input_ndim
-    Rank of the tensor for which the gradient is being computed
+        Rank of the tensor for which the gradient is being computed
 
     Arg: input_shape
-    Shape of the tensor for gradient calculation
+        Shape of the tensor for gradient calculation
 
     Arg: local_gradient
-    Gradient that is propogated from the output tensor.
+        Gradient that is propogated from the output tensor.
+
     """
 
     # Given the gradient of the output is scalar there is no need for broadcasting
