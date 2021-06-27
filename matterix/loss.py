@@ -2,7 +2,7 @@ from numpy import diff
 from numpy.random import logseries
 from .tensor import Tensor
 
-# TODO: RMSE, MAE, Binary cross-entropy, Categorical cross-entropy, kullback leibler divergence loss
+# TODO: MAE, Binary cross-entropy, Categorical cross-entropy, kullback leibler divergence loss
 
 
 def MSE(y_train: Tensor, y_pred: Tensor) -> Tensor:

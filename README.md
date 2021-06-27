@@ -49,14 +49,51 @@ pip install --upgrade matterix
 <h3 style="font-weight:bold">Example usage</h3>
 
 ```python
-"""
-Task: Simple model to predict if a given number is odd/even
-"""
+
 import numpy as np
 from matterix import Tensor
+import matterix.nn as nn
 import matterix.functions as F
+from matterix.loss import RMSE
 
-# TO BE ADDED
+x_train, y_train = Tensor(x[:1500]), Tensor(y[:1500])
+x_test, y_test = Tensor(x[1500:]), Tensor(y[1500:])
+
+class Model(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.w1 = Tensor(np.random.randn(1, 150), requires_grad=True)
+        self.b1 = Tensor(np.random.randn(1, 150), requires_grad=True)
+        self.w2 = Tensor(np.random.randn(150, 1), requires_grad=True)
+        self.b2 = Tensor(np.random.randn(1), requires_grad=True)
+
+    def forward(self, x) -> Tensor:
+        out_1 = (x @ self.w1) + self.b1
+        out_2 = F.sigmoid(out_1)
+        output = (out_2 @ self.w2) + self.b2
+
+        return output
+
+model = Model()
+optimizer = SGD(model, model.parameters())
+
+EPOCHS = 100
+t_bar = trange(EPOCHS)
+
+for i in t_bar:
+
+    optimizer.zero_grad()
+
+    y_pred = model(x_train)
+
+    loss = RMSE(y_train, y_pred)
+
+    loss.backward()
+
+    optimizer.step()
+    t_bar.set_description("Epoch: %.0f Loss: %.5f" % (i, loss.data))
+    t_bar.refresh()
+
 ```
 
 Take a look at `examples` for different examples
@@ -76,9 +113,17 @@ pytest -v
 <h3 style="font-weight:bold" id="releases">Release history</h3>
 
 -   **0.1.0**
+
     -   First stable release
     -   **ADD:** Tensor, tensor operations, sigmoid functions
     -   **FIX:** Inaccuracies with gradient computation
+
+-   **0.1.1**
+    -   **ADD:** Optimizer: SGD
+    -   **ADD:** Functions: Relu
+    -   **ADD:** Loss functions: RMSE, MSETensor
+    -   **ADD:** Module: For defining neural networks
+    -   **FIX:** Floating point precision issue when calculating gradient
 
 <h3 style="font-weight:bold" id="contributing">Contributing</h3>
 
