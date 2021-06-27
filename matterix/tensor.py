@@ -4,7 +4,7 @@ import numpy as np
 ArrayableType = Union[float, list, np.ndarray]
 TensorableType = Union[float, np.ndarray, "Tensor"]
 
-# TODO: randn, normal, randint
+# TODO: randn, normal, randint, argmax
 
 
 def enforceTensor(_input: TensorableType) -> "Tensor":
