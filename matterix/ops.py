@@ -195,7 +195,7 @@ def sum(a: TensorableType):
 
 
 @registerFn(Tensor, "__pow__")
-def pow(a: TensorableType, pow: int) -> Tensor:
+def pow(a: TensorableType, pow: float) -> Tensor:
 
     a = enforceTensor(a)
 

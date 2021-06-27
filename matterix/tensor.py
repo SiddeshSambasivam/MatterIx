@@ -15,14 +15,21 @@ def enforceTensor(_input: TensorableType) -> "Tensor":
         return Tensor(_input)
 
 
-def enforceNumpy(_input: ArrayableType, dtype=np.float64) -> np.ndarray:
+def enforceNumpy(_input: ArrayableType, dtype=np.float32) -> np.ndarray:
     """Converts the input to numpy array. This is called only during input validation"""
 
     if _input is None:
         raise TypeError("No input data provided. Tensor cannot be empty.")
 
     if not isinstance(_input, np.ndarray):
-        if type(_input) in [list, float, np.float32, np.float64]:
+        if type(_input) in [
+            list,
+            float,
+            np.float32,
+            np.float64,
+            np.float16,
+            np.float128,
+        ]:
             return np.array(_input, dtype=dtype)
         raise ValueError("Tensor only accepts float, list and numpy array as data.")
 
@@ -56,9 +63,11 @@ class Tensor:
 
     """
 
-    def __init__(self, data: ArrayableType, requires_grad: bool = False) -> None:
+    def __init__(
+        self, data: ArrayableType, requires_grad: bool = False, dtype=np.float64
+    ) -> None:
 
-        self.data = enforceNumpy(data)
+        self.data = enforceNumpy(data, dtype=dtype)
         self.ctx: List["Tensor"] = []
         self.grad = Tensor(np.zeros_like(self.data)) if requires_grad == True else None
         self.backward_fn = lambda: None
