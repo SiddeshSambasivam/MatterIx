@@ -54,8 +54,6 @@ MatterIx is a simple deep learning framework built to understand the fundamental
 
 The <b>core value of matterix</b> is that it is a distilled version of pytorch so it is easier to understand what is happening under the hood.
 
-At its core, matterix
-
 <h3 style="font-weight:bold" id="#ins">Installation</h3>
 a. Install it from github
 
