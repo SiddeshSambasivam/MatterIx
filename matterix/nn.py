@@ -7,10 +7,11 @@ class Module:
         pass
 
     def parameters(self):
+
         params = dict()
-        # Not sure if this account for all the cases
+
         for i in inspect.getmembers(self):
-            if not i[0].startswith("_"):
+            if not i[0].startswith("_") and not callable(i[1]):
                 if not inspect.ismethod(i[1]):
                     params[i[0]] = i[1]
 

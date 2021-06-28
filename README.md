@@ -50,35 +50,50 @@ pip install --upgrade matterix
 
 ```python
 # Simple linear regression
-import numpy as np
 from matterix import Tensor
+from matterix.nn import Module
+from matterix.optim import SGD
+from matterix.loss import MSE
 
-x_data = Tensor.randn(100,3)
-coef = Tensor([-1,3,-2])
+from tqdm import trange
+
+x_data = Tensor.randn(100,5)
+coef = Tensor([-1,3,-2, 8, 6])
 y_data = x_data @ coef + 5.0
 
-w = Tensor.randn(3, requires_grad=True)
-b = Tensor.randn(requires_grad=True)
+class Model(Module):
 
-for i in range(100):
+    def __init__(self):
+        self.w = Tensor.randn(5, requires_grad=True)
+        self.b = Tensor.randn(requires_grad=True)
 
-    w.zero_grad()
-    b.zero_grad()
+    def forward(self, x) -> Tensor:
+        return x @ self.w + self.b
 
-    pred = x_data @ w + b
-    errors = pred - y_data
+model = Model()
+optimizer = SGD(model, model.parameters(), lr=0.001)
 
-    loss = (errors * errors).sum()
+epochs = 100
+
+for epoch in (t:=trange(epochs)):
+
+    optimizer.zero_grad()
+
+    y_pred = model(x_data)
+    error = (y_data-y_pred)
+
+    loss = (error*error).sum()
 
     loss.backward()
 
-    w -= w.grad * 0.001
-    b -= b.grad * 0.001
+    optimizer.step()
 
-    print(f"Epoch: {i} Loss: {loss.data}")
+    t.set_description("Epoch: %.0f Loss: %.10f" % (epoch, loss.data))
+    t.refresh()
 
-print(w) # Tensor([-0.99999989  3.00000008 -2.00000006], shape=(3,))
-print(b) # Tensor(4.999999840445795, shape=(1,))
+print(w) # Tensor([-1.000003    3.00000593 -1.99999385  7.99999544  6.0000062 ], shape=(5,))
+print(b) # Tensor(5.000001599010044, shape=(1,))
+
 ```
 
 Take a look at `examples` for different examples
