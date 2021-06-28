@@ -87,56 +87,7 @@ Gradients are computed using reverse-mode autodiff. All computations are represe
 
 The fundamental idea behind **`autodiff`** is that it calculates the local derivative for each variable rather than its partial derivative. This way traversing through the computational graph is simple and modular, i.e we could calculate the partial derivative of any variable with respect to the output with just one traversal, with a complexity of <img src="https://latex.codecogs.com/gif.latex?O(n)"/>.
 
-The difference between **partial** and **local derivative** is the way each variable is treated in each equation. When calculating the partial derivative of a function, the expression is broken down into variables, for example <img src="https://latex.codecogs.com/gif.latex?c=a*b"/> and <img src="https://latex.codecogs.com/gif.latex?d=a+b+c"/>, instead of using <img src="https://latex.codecogs.com/gif.latex?c"/>, we say <img src="https://latex.codecogs.com/gif.latex?a*b"/> in the <img src="https://latex.codecogs.com/gif.latex?d=a*b*a*b"/>. On the other hand, when calculating the local derivative of a function, each element in the expression is considered a variable. I understand this might not be clear, so refer to the following example:
-
-```python
-# Lets consider two variables `a` and `b`
-a = 2
-b = 3
-
-# Function c which is a multiplied by b
-c = a*b
-
-# where d is a function of `a`, `b`, `c` but infact it is just a function of two variables `a` and `b`
-d = a+c+b
-
-```
-
-And if we work out the partial derivative of <img src="https://latex.codecogs.com/gif.latex?\frac{\partial d}{\partial a}"/>
-
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial d}{\partial a}=\frac{\partial a}{\partial a} + \frac{\partial c}{\partial a} + \frac{\partial b}{\partial a}" /><br/>
-
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial d}{\partial a}=1+\frac{\partial(a*b)}{\partial a}+0"/><br/>
-
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial d}{\partial a}=1+a\frac{\partial (b)}{\partial a}+b\frac{\partial (a)}{\partial a}"/><br/>
-
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial d}{\partial a}=1+a*0+b*1"/><br/>
-
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial d}{\partial a}=1+b=1+3=4"/><br/>
-
-The important part to note is that `c` is written as `a*b` when calculating the derivative. Now, let's try the same computation using the local derivative method.
-
-Local derivative of `d` w.r.t `a` is expressed as <img src="https://latex.codecogs.com/gif.latex?\frac{\partial \bar{d}}{\partial a}"/>, note the bar over the `d`.
-
-#### What does this really mean?
-
-Local derivative treats `c` as a variable instead of a function of `a` and `b`. Therefore when calculating <img src="https://latex.codecogs.com/gif.latex?\frac{\partial \bar{d}}{\partial a}" />, we treat `c` as a constant rather than a function of `a` and `b`. This gives us the <img src="https://latex.codecogs.com/gif.latex?\frac{\partial \bar{d}}{\partial a} = 1" /><br/>
-
-Similarly,
-
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial \bar{d}}{\partial b}=1" /><br/>
-
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial \bar{d}}{\partial c}=1" /><br/>
-
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial \bar{c}}{\partial a}=b" /><br/>
-
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial \bar{c}}{\partial b}=a" /><br/>
-
-Therefore, to calculate <img src="https://latex.codecogs.com/gif.latex?\frac{\partial d}{\partial a}" /> we have to multiply edges of a path and add the different path to a node.
-
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial d}{\partial a}=\frac{\partial \bar{d}}{\partial a} + \frac{\partial \bar{c}}{\partial a}" /><br/>
-
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial d}{\partial a}=1+b=1+3=4" /><br/>
+The difference between **partial** and **local derivative** is the way each variable is treated in each equation. When calculating the partial derivative of a function, the expression is broken down into variables, for example <img src="https://latex.codecogs.com/gif.latex?c=a*b"/> and <img src="https://latex.codecogs.com/gif.latex?d=a+b+c"/>, instead of using <img src="https://latex.codecogs.com/gif.latex?c"/>, we say <img src="https://latex.codecogs.com/gif.latex?a*b"/> in the <img src="https://latex.codecogs.com/gif.latex?d=a*b*a*b"/>. On the other hand, when calculating the local derivative of a function, each element in the expression is considered a variable. I understand this might not be clear, so refer to the following <a href="https://github.com/SiddeshSambasivam/MatterIx/wiki/Understanding-reverse-mode-automatic-differentiation">explanation</a>.
 
 <h3 style="font-weight:bold" id="loss">2. Loss functions</h3>
 
