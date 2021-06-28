@@ -1,13 +1,18 @@
 import inspect
+from typing import Dict
 from matterix.tensor import Tensor
+
+# TODO: Linear, CONV, RNN, LSTM
 
 
 class Module:
+    """Base class to define neural networks"""
+
     def __init__(self) -> None:
         pass
 
-    def parameters(self):
-
+    def parameters(self) -> Dict[str, Tensor]:
+        """ """
         params = dict()
 
         for i in inspect.getmembers(self):

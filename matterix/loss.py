@@ -1,5 +1,3 @@
-from numpy import diff
-from numpy.random import logseries
 from .tensor import Tensor
 
 # TODO: MAE, Binary cross-entropy, Categorical cross-entropy, kullback leibler divergence loss

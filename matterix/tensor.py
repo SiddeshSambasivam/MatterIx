@@ -4,7 +4,7 @@ import numpy as np
 ArrayableType = Union[float, list, np.ndarray]
 TensorableType = Union[float, np.ndarray, "Tensor"]
 
-# TODO: normal, randint, argmax, batching
+# TODO: normal, argmax, batching
 
 
 def enforceTensor(_input: TensorableType) -> "Tensor":
@@ -201,9 +201,26 @@ class Tensor:
 
         Example
         -------
-        a = matterix.randn(2,2)
-        Tensor([[[ 1.06210055 -0.04561329 -1.08304203]
-            [-1.38884417 -0.73874617  1.55356213]]], shape=(1, 2, 3))
+        >> a = matterix.randn(2,2)
+        Tensor([[ 0.36658869 -1.2298281 ]
+        [ 1.63282169 -0.669039  ]], shape=(2, 2))
 
         """
         return Tensor(np.random.randn(*dim), requires_grad=requires_grad)
+
+    @staticmethod
+    def randint(
+        size: Tuple[int], low: int, high: int = None, requires_grad: bool = False
+    ) -> "Tensor":
+        """Returns random floating-point tensor
+
+        Example
+        -------
+        >> a = matterix.randint(0,2 (3,3))
+        Tensor([[ 1 0 1],
+        [ 2 2]], shape=(3, 3))
+
+        """
+        return Tensor(
+            np.random.randint(low, high, size=size), requires_grad=requires_grad
+        )
