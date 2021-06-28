@@ -49,51 +49,36 @@ pip install --upgrade matterix
 <h3 style="font-weight:bold">Example usage</h3>
 
 ```python
-
+# Simple linear regression
 import numpy as np
 from matterix import Tensor
-import matterix.nn as nn
-import matterix.functions as F
-from matterix.loss import RMSE
 
-x_train, y_train = Tensor(x[:1500]), Tensor(y[:1500])
-x_test, y_test = Tensor(x[1500:]), Tensor(y[1500:])
+x_data = Tensor.randn(100,3)
+coef = Tensor([-1,3,-2])
+y_data = x_data @ coef + 5.0
 
-class Model(nn.Module):
-    def __init__(self) -> None:
-        super().__init__()
-        self.w1 = Tensor(np.random.randn(1, 150), requires_grad=True)
-        self.b1 = Tensor(np.random.randn(1, 150), requires_grad=True)
-        self.w2 = Tensor(np.random.randn(150, 1), requires_grad=True)
-        self.b2 = Tensor(np.random.randn(1), requires_grad=True)
+w = Tensor.randn(3, requires_grad=True)
+b = Tensor.randn(requires_grad=True)
 
-    def forward(self, x) -> Tensor:
-        out_1 = (x @ self.w1) + self.b1
-        out_2 = F.sigmoid(out_1)
-        output = (out_2 @ self.w2) + self.b2
+for i in range(100):
 
-        return output
+    w.zero_grad()
+    b.zero_grad()
 
-model = Model()
-optimizer = SGD(model, model.parameters())
+    pred = x_data @ w + b
+    errors = pred - y_data
 
-EPOCHS = 100
-t_bar = trange(EPOCHS)
-
-for i in t_bar:
-
-    optimizer.zero_grad()
-
-    y_pred = model(x_train)
-
-    loss = RMSE(y_train, y_pred)
+    loss = (errors * errors).sum()
 
     loss.backward()
 
-    optimizer.step()
-    t_bar.set_description("Epoch: %.0f Loss: %.5f" % (i, loss.data))
-    t_bar.refresh()
+    w -= w.grad * 0.001
+    b -= b.grad * 0.001
 
+    print(f"Epoch: {i} Loss: {loss.data}")
+
+print(w) # Tensor([-0.99999989  3.00000008 -2.00000006], shape=(3,))
+print(b) # Tensor(4.999999840445795, shape=(1,))
 ```
 
 Take a look at `examples` for different examples

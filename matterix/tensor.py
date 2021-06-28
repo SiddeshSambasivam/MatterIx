@@ -15,7 +15,7 @@ def enforceTensor(_input: TensorableType) -> "Tensor":
         return Tensor(_input)
 
 
-def enforceNumpy(_input: ArrayableType, dtype=np.float32) -> np.ndarray:
+def enforceNumpy(_input: ArrayableType, dtype=np.float64) -> np.ndarray:
     """Converts the input to numpy array. This is called only during input validation"""
 
     if _input is None:
@@ -194,3 +194,16 @@ class Tensor:
 
     def __repr__(self) -> str:
         return f"Tensor({self.data}, shape={self.shape})"
+
+    @staticmethod
+    def randn(*dim, requires_grad: bool = False) -> "Tensor":
+        """Returns random floating-point tensor
+
+        Example
+        -------
+        a = matterix.randn(2,2)
+        Tensor([[[ 1.06210055 -0.04561329 -1.08304203]
+            [-1.38884417 -0.73874617  1.55356213]]], shape=(1, 2, 3))
+
+        """
+        return Tensor(np.random.randn(*dim), requires_grad=requires_grad)

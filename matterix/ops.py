@@ -285,6 +285,7 @@ def isub(a: TensorableType, b: TensorableType) -> Tensor:
     b = enforceTensor(b)
 
     a.data = a.data - b.data
+    a.grad = None
     return a
 
 
@@ -300,6 +301,7 @@ def imul(a: TensorableType, b: TensorableType) -> Tensor:
     b = enforceTensor(b)
 
     a.data = a.data * b.data
+    a.grad = None
     return a
 
 
