@@ -89,8 +89,6 @@ The fundamental idea behind **`autodiff`** is that it calculates the local deriv
 
 The difference between **partial** and **local derivative** is the way each variable is treated in each equation. When calculating the partial derivative of a function, the expression is broken down into variables, for example <img src="https://latex.codecogs.com/gif.latex?c = a*b"/> and <img src="https://latex.codecogs.com/gif.latex?d=a+b+c"/>, instead of using <img src="https://latex.codecogs.com/gif.latex?c"/>, we say <img src="https://latex.codecogs.com/gif.latex?a*b"/> in the <img src="https://latex.codecogs.com/gif.latex?d=a*b*a*b"/>. On the other hand, when calculating the local derivative of a function, each element in the expression is considered a variable. I understand this might not be clear, so refer to the following example:
 
-### Example
-
 ---
 
 ```python
