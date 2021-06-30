@@ -29,7 +29,8 @@ def sigmoid(x: TensorableType) -> Tensor:
 def tanh(x: TensorableType) -> Tensor:
 
     x = enforceTensor(x)
-    tanh_x = np.tanh(x)
+
+    tanh_x = np.tanh(x.data)
 
     output = Tensor(tanh_x, requires_grad=x.requires_grad)
     output.save_for_backward([x])
