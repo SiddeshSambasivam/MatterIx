@@ -252,6 +252,11 @@ def matmul(a: TensorableType, b: TensorableType) -> Tensor:
     return output
 
 
+def conv1D():
+    """Perform 1-dimensional convolutional operation"""
+    pass
+
+
 @registerFn(Tensor, "matmul")
 def TensorMatMul(a: TensorableType, b: TensorableType) -> Tensor:
 
