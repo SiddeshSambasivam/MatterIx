@@ -183,39 +183,38 @@ The following is a simple example
 ```python
 # Simple linear regression
 from matterix import Tensor
-from matterix.nn import Module
+from matterix.nn import Module, Linear
 from matterix.optim import SGD
 from matterix.loss import MSE
 
 from tqdm import trange
 
-x_data = Tensor.randn(100,5)
-coef = Tensor([-1,3,-2, 8, 6])
+x_data = Tensor.randn(100, 5)
+coef = Tensor([-1, 3, -2, 8, 6])
 y_data = x_data @ coef + 5.0
 
-class Model(Module):
 
+class Model(Module):
     def __init__(self):
-        self.w = Tensor.randn(5, requires_grad=True)
-        self.b = Tensor.randn(requires_grad=True)
+        self.l1 = Linear(5)
 
     def forward(self, x) -> Tensor:
-        return x @ self.w + self.b
+        output = self.l1(x)
+        return output
+
 
 model = Model()
 optimizer = SGD(model, model.parameters(), lr=0.001)
 
 epochs = 100
 
-for epoch in (t:=trange(epochs)):
+for epoch in (t := trange(epochs)):
 
     optimizer.zero_grad()
 
     y_pred = model(x_data)
-    error = (y_data-y_pred)
 
-    loss = (error*error).sum()
-
+    loss = MSE(y_data, y_pred, norm=False)
     loss.backward()
 
     optimizer.step()
