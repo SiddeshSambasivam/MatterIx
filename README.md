@@ -15,7 +15,7 @@
   <a style="padding: 0 10px;" href="#features">Features</a>
 </p>
 
-MatterIx is a simple deep learning framework built to understand the fundamental concepts of <b>autodiff</b>, <b>optimizers</b>, <b>loss functions</b> from a first principle basis. It provide features such as automatic differentiation (autodiff), optimizers, loss functions and basic modules to create your own neural networks.
+MatterIx is a simple deep learning framework built to understand the fundamental concepts of <b>autodiff</b>, <b>optimizers</b> and <b>loss functions</b> from a first principle basis. It provide features such as automatic differentiation (autodiff), optimizers, loss functions and basic modules to create your own neural networks.
 
 <table align="center" width="600px">
  <tr>
@@ -40,7 +40,7 @@ MatterIx is a simple deep learning framework built to understand the fundamental
   </tr>
   <tr>
     <td><a href="#act">Activation functions</a></td>
-    <td>Provides the necessary non-linearity to model. It acts as a switch for the nodes</td>
+    <td>It basically decides whether a neuron should be activated or not. Activation function is a non-linear transformation which applied to the output before passing it to the next layer</td>
     <td>Sigmoid, tanh, ReLU</td>
   </tr>
   <tr>
@@ -70,6 +70,8 @@ python setup.py install
 
 ```
 
+(or)
+
 b. Install from PyPI
 
 ```bash
@@ -83,9 +85,9 @@ pip install --upgrade matterix
 
 Gradients are computed using reverse-mode autodiff. All computations are representated as a graph of tensors with each tensor holding a reference to a function which can compute the local gradient of that tensor. The calculation of the partial derivative for each tensor is completed when the entire graph is traversed.
 
-The fundamental idea behind **`autodiff`** is that it calculates the local derivative for each variable rather than its partial derivative. This way traversing through the computational graph is simple and modular, i.e we could calculate the partial derivative of any variable with respect to the output with just one traversal, with a complexity of <img src="https://latex.codecogs.com/gif.latex?O(n)"/>.
+The fundamental idea behind **`autodiff`** is that it calculates the local derivative for each variable rather than its partial derivative. This way traversing through the computational graph is simple and modular, i.e we could calculate the partial derivative of any variable with respect to the output with just one traversal, with a complexity of `O(n)`.
 
-The difference between **partial** and **local derivative** is the way each variable is treated in each equation. When calculating the partial derivative of a function, the expression is broken down into variables, for example <img src="https://latex.codecogs.com/gif.latex?c=a*b"/> and <img src="https://latex.codecogs.com/gif.latex?d=a+b+c"/>, instead of using <img src="https://latex.codecogs.com/gif.latex?c"/>, we say <img src="https://latex.codecogs.com/gif.latex?a*b"/> in the <img src="https://latex.codecogs.com/gif.latex?d=a*b*a*b"/>. On the other hand, when calculating the local derivative of a function, each element in the expression is considered a variable. I understand this might not be clear, so refer to the following <a href="https://github.com/SiddeshSambasivam/MatterIx/wiki/Understanding-reverse-mode-automatic-differentiation">explanation</a>.
+The difference between **partial** and **local derivative** is the way each variable is treated in each equation. When calculating the partial derivative of a function, the expression is broken down into variables, for example `c= a* b` and `d=a+b+c`, instead of using `c`, we say `a*b` in the `d= a+b+(a*b)`. On the other hand, when calculating the local derivative of a function, each element in the expression is considered a variable. I understand this might not be clear, so refer to the following <a href="https://github.com/SiddeshSambasivam/MatterIx/wiki/Understanding-reverse-mode-automatic-differentiation">explanation</a>.
 
 <h3 style="font-weight:bold" id="loss">2. Loss functions</h3>
 
