@@ -1,9 +1,10 @@
 import unittest
-from unittest import result
 import numpy as np
-from numpy.lib import gradient
 from matterix import Tensor
 import matterix.functions as F
+import matterix.loss as loss
+
+# TODO: write tests for relu, tanh, mse, rmse
 
 
 class TestTensorFunctions(unittest.TestCase):
