@@ -1,10 +1,10 @@
 import inspect
 from typing import Dict
 
-from numpy.core.numeric import outer
 from matterix.tensor import Tensor
 
 # TODO: Conv, RNN, LSTM
+# TODO: Add docstrings for linear layer
 
 
 class Module:
