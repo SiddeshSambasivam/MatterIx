@@ -4,10 +4,68 @@ from matterix import Tensor
 import matterix.functions as F
 import matterix.loss as loss
 
-# TODO: write tests for relu, tanh, mse, rmse
+# TODO: write tests for mse, rmse
 
 
 class TestTensorFunctions(unittest.TestCase):
+    def test_relu(self):
+
+        an = np.array([1, 2, 3, 4])
+        bn = np.array([-3, 6, -5, 8])
+
+        at = Tensor(an, requires_grad=True)
+        bt = Tensor(bn, requires_grad=True)
+
+        ct = at * bt
+        dt = F.relu(ct)
+
+        dt.backward(gradient=Tensor.ones_like(dt))
+
+        assert dt.tolist() == [0, 12, 0, 32]
+        assert at.grad.tolist() == [0, 6, 0, 8]
+        assert bt.grad.tolist() == [0, 2, 0, 4]
+
+    def test_tanh(self):
+
+        an = np.array([1, 2, 3, 4])
+        bn = np.array([-3, 6, -5, 8])
+
+        at = Tensor(an, requires_grad=True)
+        bt = Tensor(bn, requires_grad=True)
+
+        ct = at * bt
+        dt = F.tanh(ct)
+
+        dt.backward(gradient=Tensor.ones_like(dt))
+
+        assert (
+            np.allclose(
+                dt.data,
+                np.array([-0.9950547814369202, 1.0000, -1.0000, 1.0000]).astype(
+                    np.float32
+                ),
+            )
+            == True
+        )
+
+        assert (
+            np.allclose(
+                at.grad.data,
+                np.array([-0.029597946, 0.0000, -0.0000, 0.0000]),
+                rtol=1e-05,
+            )
+            == True
+        )
+
+        assert (
+            np.allclose(
+                bt.grad.data,
+                np.array([0.0098659815, 0.0000, 0.0000, 0.0000]),
+                rtol=1e-05,
+            )
+            == True
+        )
+
     def test_simple_sigmoid(self):
 
         an = np.array([1, 2, 3, 4, 5, 6, 7, 8])
@@ -30,7 +88,6 @@ class TestTensorFunctions(unittest.TestCase):
 
         dt.backward(gradient=Tensor.ones_like(dt))
 
-        print(at.grad, "\n", bt.grad, "\n", ct.grad, "\n", dt.grad)
         assert (
             np.allclose(
                 dt.data, np.array([0.9933, 1.0000, 1.0000, 1.0000]).astype(np.float32)
