@@ -198,6 +198,7 @@ y_data = x_data @ coef + 5.0
 
 class Model(Module):
     def __init__(self):
+        # Linear is essentially an abstraction provided for a linear model which contains a weights and bias initialised for the layer.
         self.l1 = Linear(5)
 
     def forward(self, x) -> Tensor:
@@ -224,8 +225,8 @@ for epoch in (t := trange(epochs)):
     t.set_description("Epoch: %.0f Loss: %.10f" % (epoch, loss.data))
     t.refresh()
 
-print(w) # Tensor([-1.000003 3.00000593 -1.99999385 7.99999544 6.0000062 ], shape=(5,))
-print(b) # Tensor(5.000001599010044, shape=(1,))
+print(model.l1.w) # Tensor([-1.000003 3.00000593 -1.99999385 7.99999544 6.0000062 ], shape=(5,))
+print(model.l1.b) # Tensor(5.000001599010044, shape=(1,))
 
 ```
 
