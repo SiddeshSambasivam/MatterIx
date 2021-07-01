@@ -57,7 +57,7 @@ def relu(x: TensorableType) -> Tensor:
 
         if x.requires_grad:
 
-            local_gradient = (x.data > 0) * output.grad.data
+            local_gradient = (x.data >= 0) * output.grad.data
             x.grad.data += local_gradient
 
     output.backward_fn = backward_fn

@@ -21,8 +21,7 @@ class SGD:
         Learning rate. Size of each gradient step
     """
 
-    def __init__(self, model: Module, parameters: dict, lr: float = 0.001) -> None:
-        self.model = model
+    def __init__(self, parameters: dict, lr: float = 0.001) -> None:
         self.params = parameters
         self.lr = lr
 
@@ -33,8 +32,7 @@ class SGD:
             v -= v.grad * self.lr
             self.params[k] = v
 
-        self.model.__dict__.update(self.params)
-
     def zero_grad(self) -> None:
         """Sets the gradients of all the parameters to zero"""
-        self.model.zero_grad()
+        for _, param in self.params.items():
+            param.zero_grad()
