@@ -94,7 +94,7 @@ The difference between **partial** and **local derivative** is the way each vari
 2.1 Mean squared error. Example
 
 ```python
-from matterix.loss import MSE
+from matterix.functions import MSE
 
 y_train = ... # Actual/true value
 y_pred = ... # model prediction
@@ -106,7 +106,7 @@ loss = MSE(y_train, y_pred)
 2.2 Root Mean squared error
 
 ```python
-from matterix.loss import RMSE
+from matterix.functions import RMSE
 
 y_train = ... # Actual/true value
 y_pred = ... # model prediction
