@@ -1,10 +1,11 @@
 from typing import Tuple
 import numpy as np
-from .tensor import Tensor, enforceNumpy, enforceTensor, TensorableType
+from .tensor import Tensor, enforceTensor, TensorableType
 from .utils import registerFn
+from .functions import exp, log, relu, sigmoid, tanh
 
-# TODO: Slice
-# TODO: Transpose
+# TODO: Slice, transpose, reshape
+# TODO: max, min
 
 
 def manageBroadcasting(
@@ -175,11 +176,12 @@ def div(a: TensorableType, b: TensorableType) -> Tensor:
 
 
 @registerFn(Tensor, "sum")
-def sum(a: TensorableType):
+def sum(a: TensorableType, axis: int = None):
 
     a = enforceTensor(a)
+    sum_data = a.data.sum() if axis is None else a.data.sum(axis=axis)
 
-    output = Tensor(data=a.data.sum(), requires_grad=a.requires_grad)
+    output = Tensor(data=sum_data, requires_grad=a.requires_grad)
     output.save_for_backward([a])
 
     def backward_fn():
@@ -258,6 +260,31 @@ def matmul(a: TensorableType, b: TensorableType) -> Tensor:
 def TensorMatMul(a: TensorableType, b: TensorableType) -> Tensor:
 
     return matmul(a, b)
+
+
+@registerFn(Tensor, "exp")
+def exp(x: TensorableType) -> Tensor:
+    return exp(x)
+
+
+@registerFn(Tensor, "log")
+def log(x: TensorableType) -> Tensor:
+    return log(x)
+
+
+@registerFn(Tensor, "sigmoid")
+def sigmoid(x: TensorableType) -> Tensor:
+    return sigmoid(x)
+
+
+@registerFn(Tensor, "relu")
+def relu(x: TensorableType) -> Tensor:
+    return relu(x)
+
+
+@registerFn(Tensor, "tanh")
+def tanh(x: TensorableType) -> Tensor:
+    return tanh(x)
 
 
 @registerFn(Tensor, "__radd__")
