@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="MatterIx",
-    version="1.0.1",
+    version="1.1.1",
     author="Siddesh Sambasivam Suseela",
     author_email="plutocrat45@gmail.com",
     description="Just another deep learning framework",
