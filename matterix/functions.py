@@ -5,6 +5,8 @@ from .tensor import Tensor, TensorableType, enforceTensor
 # TODO: MAE, Binary cross-entropy, Categorical cross-entropy, kullback leibler divergence loss
 # TODO: Write tests for log
 
+# BUG: Check for softmax axis param issue
+
 
 def MSE(y_train: Tensor, y_pred: Tensor, norm: bool = True) -> Tensor:
 
@@ -40,12 +42,35 @@ def log(x: TensorableType) -> Tensor:
     return output
 
 
-def softmax(x: TensorableType) -> Tensor:
+def softmax(x: TensorableType, axis=1) -> Tensor:
     # Apply exp to all values and divide the same with the sum of it
-    x = enforceTensor(x)
+    """
+    Softmax function suffers from numerical error hence must be stabilized against overflow and underflow.
 
-    x_exp = exp(x)
-    output = x_exp / x_exp.sum()
+    softmax(x)_i = exp(x)_i / sum(exp(x))
+
+    When x_i is a large negative number, exp(x_i) will underflow and approximate it to zero.
+    This results in denominator tending to infinity -> nan
+
+    """
+
+    x = enforceTensor(x)
+    z = x.data - x.data.max(axis=1).reshape(x.shape[0], 1)
+    x_exp = np.exp(z)
+
+    output_data = x_exp / x_exp.sum(axis=1).reshape(x_exp.data.shape[0], 1)
+
+    output = Tensor(output_data, requires_grad=x.requires_grad)
+    output.save_for_backward([x])
+
+    def backward_fn():
+
+        if x.requires_grad:
+
+            local_gradient = output.grad.data * output_data * (1.0 - output_data)
+            x.grad.data += local_gradient
+
+    output.backward_fn = backward_fn
 
     return output
 
