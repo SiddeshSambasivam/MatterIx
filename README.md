@@ -183,50 +183,70 @@ model.parameters() # Gets all the parameters
 The following is a simple example
 
 ```python
-# Simple linear regression
-from matterix import Tensor
-from matterix.nn import Module, Linear
+# MNIST classifier
+
+import numpy as np
+from matterix import Tensor, datasets
+import matterix.nn as nn
+import matterix.functions as F
 from matterix.optim import SGD
-from matterix.loss import MSE
 
 from tqdm import trange
 
-x_data = Tensor.randn(100, 5)
-coef = Tensor([-1, 3, -2, 8, 6])
-y_data = x_data @ coef + 5.0
+# Get the MNIST dataset
+x_train, y_train, x_test, y_test = datasets.getMNIST()
 
 
-class Model(Module):
-    def __init__(self):
-        # Linear is essentially an abstraction provided for a linear model which contains a weights and bias initialised for the layer.
-        self.l1 = Linear(5)
+class MnistModel(nn.Module):
+    def __init__(self) -> None:
+
+        self.l1 = nn.Linear(28 * 28, 128, bias=False)
+        self.l2 = nn.Linear(128, 10, bias=False)
 
     def forward(self, x) -> Tensor:
-        output = self.l1(x)
-        return output
+
+        o1 = self.l1(x)
+        o2 = self.l2(o1)
+        out = F.softmax(o2)
+
+        return out
 
 
-model = Model()
-optimizer = SGD(model, model.parameters(), lr=0.001)
+model = MnistModel()
+EPOCHS = 1000
+batch_size = 1000
+lr = 0.01
 
-epochs = 100
+optimizer = SGD(parameters=model.parameters(), lr=lr, momentum=0.9)
 
-for epoch in (t := trange(epochs)):
+t_bar = trange(EPOCHS)
+
+losses = []
+
+for epoch in t_bar:
 
     optimizer.zero_grad()
 
-    y_pred = model(x_data)
+    # Batching
+    ids = np.random.choice(60000, batch_size)
+    x = Tensor(x_train[ids])
+    y = Tensor(y_train[ids])
 
-    loss = MSE(y_data, y_pred, norm=False)
+    y_pred = model(x)
+    diff = y - y_pred
+    loss = (diff ** 2).sum() * (1.0 / diff.shape[0])
+
     loss.backward()
 
     optimizer.step()
+    losses.append(loss.data)
 
-    t.set_description("Epoch: %.0f Loss: %.10f" % (epoch, loss.data))
-    t.refresh()
+    t_bar.set_description("Epoch: %.0f Loss: %.8f" % (epoch, loss.data))
 
-print(model.l1.w) # Tensor([-1.000003 3.00000593 -1.99999385 7.99999544 6.0000062 ], shape=(5,))
-print(model.l1.b) # Tensor(5.000001599010044, shape=(1,))
+y_pred = model(Tensor(x_test))
+
+acc = np.array(np.argmax(y_pred.data, axis=1) == np.argmax(y_test, axis=1)).sum()
+print("Accuracy: ", acc / len(x_test))
 
 ```
 
@@ -243,6 +263,14 @@ pytest -v
 ```
 
 <h2 style="font-weight:bold" id="releases">Release history</h2>
+
+-   **1.1.1**
+
+    -   **ADD:** Linear layer: Provides an abstraction to a linear model
+    -   **ADD:** Log, exp and softmax functions
+    -   **ADD:** Momentum to SGD
+    -   **ADD:** Uniform weight initialization to linear layer
+    -   **FIX:** Softmax underflow issue, Tanh bug,
 
 -   **1.0.1**
 
