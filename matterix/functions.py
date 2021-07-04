@@ -43,14 +43,13 @@ def log(x: TensorableType) -> Tensor:
 
 
 def softmax(x: TensorableType, axis=1) -> Tensor:
-    # Apply exp to all values and divide the same with the sum of it
     """
     Softmax function suffers from numerical error hence must be stabilized against overflow and underflow.
 
     softmax(x)_i = exp(x)_i / sum(exp(x))
 
     When x_i is a large negative number, exp(x_i) will underflow and approximate it to zero.
-    This results in denominator tending to infinity -> nan
+    This results in denominator tending to zero -> nan
 
     """
 
