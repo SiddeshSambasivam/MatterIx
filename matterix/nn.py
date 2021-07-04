@@ -1,5 +1,6 @@
 import inspect
 from typing import Dict
+import numpy as np
 
 from matterix.tensor import Tensor
 
@@ -58,26 +59,31 @@ class Module:
 
 class Linear(Module):
     def __init__(
-        self, input_dim: int, output_dim: int = None, has_bias: bool = True
+        self, input_dim: int, output_dim: int = None, bias: bool = True
     ) -> None:
         super().__init__()
 
         if output_dim is None:
-            dims = [input_dim]
+            dims = (input_dim,)
         else:
-            dims = [input_dim, output_dim]
+            dims = (input_dim, output_dim)
 
-        self.w = Tensor.randn(*dims, requires_grad=True)  # Features x hidden layers
+        self.w = Tensor(
+            np.random.uniform(-1, 1, size=dims)
+            / np.sqrt(np.prod((input_dim, output_dim))),
+            requires_grad=True,
+        )  # Features x hidden layers
 
-        if has_bias:
+        if bias:
             if output_dim is None:
-                self.b = Tensor.randn(1, requires_grad=True)
+                self.b = Tensor.zeros_like(1, requires_grad=True)
             else:
-                self.b = Tensor.randn(1, output_dim, requires_grad=True)
+                self.b = Tensor(np.zeros(1, output_dim), requires_grad=True)
         else:
-            self.b = 0
+            self.b = Tensor(0.0)
 
     def forward(self, x) -> Tensor:
+
         output = x @ self.w + self.b
 
         return output
