@@ -4,7 +4,7 @@ import numpy as np
 ArrayableType = Union[float, list, np.ndarray]
 TensorableType = Union[float, np.ndarray, "Tensor"]
 
-# TODO: normal, argmax, batching
+# TODO: uniform, argmax, batching
 
 
 def enforceTensor(_input: TensorableType) -> "Tensor":
@@ -124,6 +124,21 @@ class Tensor:
 
         for v in reversed(gradient_tape):
             v.backward_fn()
+
+    def dot(self, x: TensorableType) -> "Tensor":
+        return self.matmul(x)
+
+    @staticmethod
+    def uniform(
+        low: int = 0.0,
+        high: int = 1.0,
+        size: Tuple[int] = None,
+        requires_grad: bool = False,
+    ) -> "Tensor":
+
+        return Tensor(
+            np.random.uniform(low, high, size=size), requires_grad=requires_grad
+        )
 
     def tolist(self) -> List[float]:
         """Returns tensor as a list"""
