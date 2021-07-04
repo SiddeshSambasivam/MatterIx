@@ -203,11 +203,13 @@ def pow(a: TensorableType, pow: float) -> Tensor:
     output.save_for_backward([a])
 
     def backward_fn():
-        operation_gradient = pow * (a.data ** (pow - 1))
-        local_gradient = output.grad.data * operation_gradient
-        local_gradient = manageBroadcasting(a.ndim, a.shape, local_gradient)
 
-        a.grad.data += local_gradient
+        if a.requires_grad:
+            operation_gradient = pow * (a.data ** (pow - 1))
+            local_gradient = output.grad.data * operation_gradient
+            local_gradient = manageBroadcasting(a.ndim, a.shape, local_gradient)
+
+            a.grad.data += local_gradient
 
     output.backward_fn = backward_fn
     return output
