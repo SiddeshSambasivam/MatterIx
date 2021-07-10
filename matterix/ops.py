@@ -4,7 +4,6 @@ from .tensor import Tensor, enforceTensor, TensorableType
 from .utils import registerFn
 from .functions import exp, log, relu, sigmoid, tanh
 
-# TODO: Slice, transpose, reshape
 # TODO: max, min
 
 
