@@ -5,6 +5,8 @@ ArrayableType = Union[float, list, np.ndarray]
 TensorableType = Union[float, np.ndarray, "Tensor"]
 
 # TODO: uniform, argmax, batching
+# TODO: Slice, transpose, reshape, resize
+# BUG: Grad is retained when the data is changed manually
 
 
 def enforceTensor(_input: TensorableType) -> "Tensor":
@@ -156,11 +158,7 @@ class Tensor:
         >> a.numel() # 9, as there are 9 elements in the tensor
         9
         """
-        _product = 1
-        for dim in self.shape:
-            _product *= dim
-
-        return _product
+        return np.prod(self.shape)
 
     @staticmethod
     def zeros_like(x: ArrayableType) -> "Tensor":
