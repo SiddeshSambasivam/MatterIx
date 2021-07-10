@@ -7,8 +7,7 @@ import matterix.functions as F
 
 
 class TestTensorFunctions(unittest.TestCase):
-    # @unittest.skip("Fixing the fundamental problem")
-    def test_softmax(self):
+    def test_softmax_singular(self):
         an = np.array([1, 2, 3, 4])
         bn = np.array([5, 6, 7, 8])
 
@@ -16,10 +15,7 @@ class TestTensorFunctions(unittest.TestCase):
         b = Tensor(bn, requires_grad=True)
 
         c = a * b * 0.2
-        x_exp = F.exp(c)
-        # sum_ = x_exp.data.sum()
-        d = x_exp / x_exp.data.sum()
-        # d = F.softmax(c)
+        d = F.softmax(c)
         d.backward(gradient=Tensor.ones_like(d))
 
         assert (
