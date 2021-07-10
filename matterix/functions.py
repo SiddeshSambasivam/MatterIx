@@ -6,6 +6,7 @@ from .tensor import Tensor, TensorableType, enforceTensor
 # TODO: Write tests for log
 
 # BUG: Check for softmax axis param issue
+# TODO: Refactor custom exceptions
 
 
 def MSE(y_train: Tensor, y_pred: Tensor, norm: bool = True) -> Tensor:
@@ -42,7 +43,11 @@ def log(x: TensorableType) -> Tensor:
     return output
 
 
-def softmax(x: TensorableType, axis=1) -> Tensor:
+class AxisError(Exception):
+    pass
+
+
+def softmax(x: TensorableType) -> Tensor:
     # Apply exp to all values and divide the same with the sum of it
     """
     Softmax function suffers from numerical error hence must be stabilized against overflow and underflow.
@@ -55,10 +60,14 @@ def softmax(x: TensorableType, axis=1) -> Tensor:
     """
 
     x = enforceTensor(x)
-    z = x.data - x.data.max(axis=1).reshape(x.shape[0], 1)
-    x_exp = np.exp(z)
 
-    output_data = x_exp / x_exp.sum(axis=1).reshape(x_exp.data.shape[0], 1)
+    ax = x.ndim - 1
+    dim = x.shape[:-1] + (1,)
+
+    x_norm = x.data - x.data.max(axis=ax).reshape(dim)
+    x_exp: np.ndarray = np.exp(x_norm)
+
+    output_data = x_exp / x_exp.sum(axis=ax).reshape(dim)
 
     output = Tensor(output_data, requires_grad=x.requires_grad)
     output.save_for_backward([x])
