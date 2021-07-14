@@ -3,7 +3,8 @@ import numpy as np
 from .tensor import Tensor, enforceTensor, TensorableType
 from .utils import registerFn, underDevelopment
 
-# TODO: max, min
+# TODO: min
+# BUG: max function's axis is not handled properly
 
 # Support broadcasting issue in backwards
 def manageBroadcasting(
@@ -347,9 +348,9 @@ def sum(a: TensorableType, axis: int = None):
 
 
 @registerFn(Tensor, "max")
-def max(x: Tensor) -> Tensor:
+def max(x: Tensor, axis: int = None) -> Tensor:
     """Returns the maximum value of the input tensor."""
-    output = Tensor(np.max(x.data), requires_grad=x.requires_grad)
+    output = Tensor(np.max(x.data, axis=axis), requires_grad=x.requires_grad)
 
     def backward_fn():
 
