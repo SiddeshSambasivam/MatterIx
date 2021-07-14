@@ -30,3 +30,9 @@ class TestTensorAssignment(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             _testTensorError()
+
+    def test_max(self):
+        pass
+
+    def test_min(self):
+        pass
