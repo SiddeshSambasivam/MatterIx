@@ -1,20 +1,18 @@
 from typing import Tuple
 import numpy as np
 from .tensor import Tensor, enforceTensor, TensorableType
-from .utils import registerFn
-from .functions import exp, log, relu, sigmoid, tanh
+from .utils import registerFn, underDevelopment
 
-# TODO: max, min
+# TODO: reshape, max, min
 
-
+# Support broadcasting issue in backwards
 def manageBroadcasting(
     input_ndim: int, input_shape: Tuple[int], local_gradient: np.ndarray
 ) -> np.ndarray:
-    """Handles broadcasting issue when computing gradients
+    """Handles broadcasting issue when computing gradients when the output gradient is broadcasted to the inputs.
 
     Parameters
     ----------
-
     Arg: input_ndim
         Rank of the tensor for which the gradient is being computed
 
@@ -27,7 +25,7 @@ def manageBroadcasting(
     """
 
     # Given the gradient of the output is scalar there is no need for broadcasting
-    if type(local_gradient) in [np.float32, float]:
+    if type(local_gradient) in [np.float32, float] or input_ndim > local_gradient.ndim:
         return local_gradient
 
     drop_dim: int = local_gradient.ndim - input_ndim
@@ -46,6 +44,7 @@ def manageBroadcasting(
     return local_gradient
 
 
+# Basic arithmetic operators
 @registerFn(Tensor, "__add__")
 def add(a: Tensor, b: Tensor) -> Tensor:
     """Returns the sum of inputs with their local gradients"""
@@ -174,27 +173,6 @@ def div(a: TensorableType, b: TensorableType) -> Tensor:
     return output
 
 
-@registerFn(Tensor, "sum")
-def sum(a: TensorableType, axis: int = None):
-
-    a = enforceTensor(a)
-    sum_data = a.data.sum() if axis is None else a.data.sum(axis=axis)
-
-    output = Tensor(data=sum_data, requires_grad=a.requires_grad)
-    output.save_for_backward([a])
-
-    def backward_fn():
-
-        if a.requires_grad:
-            local_gradient = output.grad.data * np.ones_like(a)
-            local_gradient = manageBroadcasting(a.ndim, a.shape, local_gradient)
-            a.grad.data += local_gradient
-
-    output.backward_fn = backward_fn
-
-    return output
-
-
 @registerFn(Tensor, "__pow__")
 def pow(a: TensorableType, pow: float) -> Tensor:
 
@@ -216,14 +194,203 @@ def pow(a: TensorableType, pow: float) -> Tensor:
     return output
 
 
+# Unary operators
+@registerFn(Tensor, "log")
+def log(x: Tensor) -> Tensor:
+
+    output = Tensor(np.log(x.data), requires_grad=x.requires_grad)
+    output.save_for_backward([x])
+
+    def backward_fn():
+
+        local_gradient = output.grad.data * (1.0 / x.data)
+        x.grad.data += local_gradient
+
+    output.backward_fn = backward_fn
+
+    return output
+
+
+@registerFn(Tensor, "exp")
+def exp(x: Tensor) -> Tensor:
+
+    output_data = np.exp(x.data)
+    output = Tensor(output_data, requires_grad=x.requires_grad)
+    output.save_for_backward([x])
+
+    def backward_fn():
+
+        if x.requires_grad:
+
+            local_gradient = output.grad.data * output_data
+            x.grad.data += local_gradient
+
+    output.backward_fn = backward_fn
+
+    return output
+
+
+@registerFn(Tensor, "sigmoid")
+def sigmoid(x: Tensor) -> Tensor:
+    output_data = 1.0 / (1.0 + np.exp(-x.data))  # sig(x)
+
+    output = Tensor(output_data, requires_grad=x.requires_grad)
+    output.save_for_backward([x])
+
+    def backward_fn():
+
+        if x.requires_grad:
+
+            sigmoid_grad = output.data * (1 - output.data)  # sig(x) * (1-sig(x))
+            local_gradient = output.grad.data * sigmoid_grad
+
+            x.grad.data += local_gradient
+
+    output.backward_fn = backward_fn
+
+    return output
+
+
+@registerFn(Tensor, "tanh")
+def tanh(x: Tensor) -> Tensor:
+
+    tanh_x = np.tanh(x.data)
+
+    output = Tensor(tanh_x, requires_grad=x.requires_grad)
+    output.save_for_backward([x])
+
+    def backward_fn():
+
+        if x.requires_grad:
+
+            local_gradient = output.grad.data * (1 - (tanh_x * tanh_x))
+            x.grad.data += local_gradient
+
+    output.backward_fn = backward_fn
+
+    return output
+
+
+@registerFn(Tensor, "relu")
+def relu(x: TensorableType) -> Tensor:
+
+    output = Tensor(np.maximum(x.data, 0), requires_grad=x.requires_grad)
+    output.save_for_backward([x])
+
+    def backward_fn():
+
+        if x.requires_grad:
+
+            local_gradient = (x.data >= 0) * output.grad.data
+            x.grad.data += local_gradient
+
+    output.backward_fn = backward_fn
+
+    return output
+
+
+@registerFn(Tensor, "softmax")
+def softmax(x: Tensor) -> Tensor:
+    """
+    Softmax function suffers from numerical error hence must be stabilized against overflow and underflow.
+
+    softmax(x)_i = exp(x)_i / sum(exp(x))
+
+    When x_i is a large negative number, exp(x_i) will underflow and approximate it to zero.
+    This results in denominator tending to zero -> nan
+
+    """
+
+    ax = x.ndim - 1
+    dim = x.shape[:-1] + (1,)
+
+    x_norm = x.data - x.data.max(axis=ax).reshape(dim)
+    x_exp: np.ndarray = np.exp(x_norm)
+
+    output_data = x_exp / x_exp.sum(axis=ax).reshape(dim)
+
+    output = Tensor(output_data, requires_grad=x.requires_grad)
+    output.save_for_backward([x])
+
+    def backward_fn():
+
+        if x.requires_grad:
+
+            local_gradient = output.grad.data * output_data * (1.0 - output_data)
+            x.grad.data += local_gradient
+
+    output.backward_fn = backward_fn
+
+    return output
+
+
+# Reduction operators
+@registerFn(Tensor, "sum")
+def sum(a: TensorableType, axis: int = None):
+
+    a = enforceTensor(a)
+    sum_data = a.data.sum() if axis is None else a.data.sum(axis=axis)
+
+    output = Tensor(data=sum_data, requires_grad=a.requires_grad)
+    output.save_for_backward([a])
+
+    def backward_fn():
+
+        if a.requires_grad:
+            local_gradient = output.grad.data * np.ones_like(a)
+            local_gradient = manageBroadcasting(a.ndim, a.shape, local_gradient)
+            a.grad.data += local_gradient
+
+    output.backward_fn = backward_fn
+
+    return output
+
+
+@registerFn(Tensor, "max")
+def max() -> Tensor:
+    pass
+
+
+@registerFn(Tensor, "min")
+def min() -> Tensor:
+    pass
+
+
+@registerFn(Tensor, "mean")
+def mean() -> Tensor:
+    pass
+
+
+# Transform operators
+@registerFn(Tensor, "reshape")
+def reshape(x, *shape) -> "Tensor":
+
+    x_data = x.data.reshape(*shape)
+    output = Tensor(x_data, requires_grad=x.requires_grad)
+    output.save_for_backward([x])
+
+    def backward_fn():
+
+        if x.requires_grad:
+            local_gradient = output.grad.data.reshape(x.shape)
+            x.grad.data += local_gradient
+
+    output.backward_fn = backward_fn
+    return output
+
+
+# Processing operators
 @registerFn(Tensor, "__matmul__")
 def matmul(a: TensorableType, b: TensorableType) -> Tensor:
     """Return result of matrix multiplication of the inputs"""
 
-    # When multiplying 1-tensor it results in an error
-
     a = enforceTensor(a)
     b = enforceTensor(b)
+
+    if a.ndim == 0 or b.ndim == 0:
+        raise RuntimeError(
+            f"Inputs dimensions to matmul needs to be atleast 1D-Tensor."
+        )
 
     try:
         data = a.data @ b.data
@@ -238,14 +405,15 @@ def matmul(a: TensorableType, b: TensorableType) -> Tensor:
     def backward_fn():
 
         if a.requires_grad:
-            a_local_gradient = output.grad.data @ b.data.T
+
+            a_local_gradient = np.dot(output.grad.data, b.data.T)
             a_local_gradient = manageBroadcasting(a.ndim, a.shape, a_local_gradient)
 
             a.grad.data += a_local_gradient
 
         if b.requires_grad:
 
-            b_local_gradient = a.data.T @ output.grad.data
+            b_local_gradient = np.dot(a.data.T, output.grad.data)
             b_local_gradient = manageBroadcasting(b.ndim, b.shape, b_local_gradient)
 
             b.grad.data += b_local_gradient
@@ -261,31 +429,7 @@ def TensorMatMul(a: TensorableType, b: TensorableType) -> Tensor:
     return matmul(a, b)
 
 
-@registerFn(Tensor, "exp")
-def exp(x: TensorableType) -> Tensor:
-    return exp(x)
-
-
-@registerFn(Tensor, "log")
-def log(x: TensorableType) -> Tensor:
-    return log(x)
-
-
-@registerFn(Tensor, "sigmoid")
-def sigmoid(x: TensorableType) -> Tensor:
-    return sigmoid(x)
-
-
-@registerFn(Tensor, "relu")
-def relu(x: TensorableType) -> Tensor:
-    return relu(x)
-
-
-@registerFn(Tensor, "tanh")
-def tanh(x: TensorableType) -> Tensor:
-    return tanh(x)
-
-
+# Assignment operators
 @registerFn(Tensor, "__radd__")
 def radd(a: TensorableType, b: TensorableType) -> Tensor:
     return add(b, a)

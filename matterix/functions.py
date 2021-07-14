@@ -1,15 +1,57 @@
-import numpy as np
 from .tensor import Tensor, TensorableType, enforceTensor
+from .utils import underDevelopment
 
-# TODO: Add docstrings (definition,parameters, example)
-# TODO: MAE, Binary cross-entropy, Categorical cross-entropy, kullback leibler divergence loss
-# TODO: Write tests for log
+# TODO: MAE, kullback leibler divergence loss
 
-# BUG: Check for softmax axis param issue
-# TODO: Refactor custom exceptions
+# Loss functions
+def CategoricalCrossEntropy(y_train: Tensor, y_pred: Tensor) -> Tensor:
+    """
+    Returns the cross entropy of two different probability distribution (PD)
+
+    Parameters
+    ----------
+    Arg: y_train (Tensor)
+        Contains the ground truth or actual PD
+    Arg: y_pred (Tensor)
+        Contains the predicted values or predicted PD
+
+    Let y_train have a distribution of `p` and y_pred have a distribution of `q`.
+    Then the difference between these distribution is described by the following equation
+
+    L(p,q) = - (p*log(q)).sum()
+
+    Example
+    --------
+    nn_loss =  CategoricalCrossEntropy(y_train, y_pred)
+    """
+    y_train = enforceTensor(y_train)
+    y_pred = enforceTensor(y_pred)
+
+    loss_pred = -1.0 * (y_train * y_pred.log()).sum()
+
+    return loss_pred
 
 
 def MSE(y_train: Tensor, y_pred: Tensor, norm: bool = True) -> Tensor:
+    """
+    Returns the mean squared error for the model predictions
+
+    Parameters
+    ----------
+    Arg: y_train (Tensor)
+        Contains the ground truth
+    Arg: y_pred (Tensor)
+        Contains the predicted values
+
+    loss = ((y_train - y_pred)**2).sum() / y_train.shape[0]
+
+    Example
+    --------
+    from matterix import Functions as F
+    ...
+
+    mse_loss =  F.MSE(y_train, y_pred)
+    """
 
     diff = y_train - y_pred
 
@@ -19,6 +61,26 @@ def MSE(y_train: Tensor, y_pred: Tensor, norm: bool = True) -> Tensor:
 
 
 def RMSE(y_train: Tensor, y_pred: Tensor) -> Tensor:
+    """
+    Returns the root mean squared error for the model predictions
+
+    Parameters
+    ----------
+    Arg: y_train (Tensor)
+        Contains the ground truth
+    Arg: y_pred (Tensor)
+        Contains the predicted values
+
+    sq_error = ((y_train - y_pred)**2).sum() / y_train.shape[0]
+    loss = sq_error**0.5
+
+    Example
+    --------
+    from matterix import Functions as F
+    ...
+
+    rmse_loss =  F.RMSE(y_train, y_pred)
+    """
 
     diff = y_train - y_pred
     mse = ((diff * diff).sum()) * (1.0 / diff.shape[0])
@@ -27,138 +89,56 @@ def RMSE(y_train: Tensor, y_pred: Tensor) -> Tensor:
     return rmse
 
 
+# Wrapper for operators
 def log(x: TensorableType) -> Tensor:
-
+    """Wrapper for the log method in Tensor"""
     x = enforceTensor(x)
-    output = Tensor(np.log(x.data), requires_grad=x.requires_grad)
-    output.save_for_backward([x])
-
-    def backward_fn():
-
-        local_gradient = output.grad.data * (1.0 / x.data)
-        x.grad.data += local_gradient
-
-    output.backward_fn = backward_fn
-
-    return output
+    return x.log()
 
 
-class AxisError(Exception):
-    pass
-
-
-def softmax(x: TensorableType) -> Tensor:
-    # Apply exp to all values and divide the same with the sum of it
-    """
-    Softmax function suffers from numerical error hence must be stabilized against overflow and underflow.
-
-    softmax(x)_i = exp(x)_i / sum(exp(x))
-
-    When x_i is a large negative number, exp(x_i) will underflow and approximate it to zero.
-    This results in denominator tending to zero -> nan
-
-    """
+@underDevelopment
+def logsoftmax(x: TensorableType) -> Tensor:
+    """Apply log to the softmax output of a tensor"""
 
     x = enforceTensor(x)
 
     ax = x.ndim - 1
     dim = x.shape[:-1] + (1,)
 
-    x_norm = x.data - x.data.max(axis=ax).reshape(dim)
-    x_exp: np.ndarray = np.exp(x_norm)
+    x_max = Tensor(x.data.max(axis=ax).reshape(dim), requires_grad=False)
+    exp_data = exp(x - x_max).sum(axis=ax)
+    logsumexp = log(exp_data)
 
-    output_data = x_exp / x_exp.sum(axis=ax).reshape(dim)
-
-    output = Tensor(output_data, requires_grad=x.requires_grad)
-    output.save_for_backward([x])
-
-    def backward_fn():
-
-        if x.requires_grad:
-
-            local_gradient = output.grad.data * output_data * (1.0 - output_data)
-            x.grad.data += local_gradient
-
-    output.backward_fn = backward_fn
+    output = x - x_max - logsumexp
 
     return output
+
+
+def softmax(x: TensorableType) -> Tensor:
+    """Wrapper for the softmax method in Tensor"""
+    x = enforceTensor(x)
+    return x.softmax()
 
 
 def exp(x: TensorableType) -> Tensor:
     """Apply natural exp on the input tensor"""
     x = enforceTensor(x)
-    output_data = np.exp(x.data)
-    output = Tensor(output_data, requires_grad=x.requires_grad)
-    output.save_for_backward([x])
-
-    def backward_fn():
-
-        if x.requires_grad:
-
-            local_gradient = output.grad.data * output_data
-            x.grad.data += local_gradient
-
-    output.backward_fn = backward_fn
-
-    return output
+    return x.exp()
 
 
 def sigmoid(x: TensorableType) -> Tensor:
-
+    """Wrapper for the sigmoid method in Tensor"""
     x = enforceTensor(x)
-    output_data = 1.0 / (1.0 + np.exp(-x.data))  # sig(x)
-
-    output = Tensor(output_data, requires_grad=x.requires_grad)
-    output.save_for_backward([x])
-
-    def backward_fn():
-
-        if x.requires_grad:
-
-            sigmoid_grad = output.data * (1 - output.data)  # sig(x) * (1-sig(x))
-            local_gradient = output.grad.data * sigmoid_grad
-
-            x.grad.data += local_gradient
-
-    output.backward_fn = backward_fn
-
-    return output
+    return x.sigmoid()
 
 
 def tanh(x: TensorableType) -> Tensor:
-
+    """Wrapper for the tanh method in Tensor"""
     x = enforceTensor(x)
-
-    tanh_x = np.tanh(x.data)
-
-    output = Tensor(tanh_x, requires_grad=x.requires_grad)
-    output.save_for_backward([x])
-
-    def backward_fn():
-
-        if x.requires_grad:
-
-            local_gradient = output.grad.data * (1 - (tanh_x * tanh_x))
-            x.grad.data += local_gradient
-
-    output.backward_fn = backward_fn
-
-    return output
+    return x.tanh()
 
 
 def relu(x: TensorableType) -> Tensor:
-
+    """Wrapper for the relu method in Tensor"""
     x = enforceTensor(x)
-    output = Tensor(np.maximum(x.data, 0), requires_grad=x.requires_grad)
-    output.save_for_backward([x])
-
-    def backward_fn():
-
-        if x.requires_grad:
-
-            local_gradient = (x.data >= 0) * output.grad.data
-            x.grad.data += local_gradient
-
-    output.backward_fn = backward_fn
-
-    return output
+    return x.relu()
