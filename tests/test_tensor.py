@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 from matterix import Tensor
 
 
@@ -32,7 +33,16 @@ class TestTensorAssignment(unittest.TestCase):
             _testTensorError()
 
     def test_max(self):
-        pass
+
+        a = Tensor(np.arange(1, 8), requires_grad=True)
+        b = Tensor([np.arange(1, 8)], requires_grad=True)
+
+        c = a.max() * b
+
+        c.backward(Tensor.ones_like(c))
+        assert c.tolist() == [[7.0, 14.0, 21.0, 28.0, 35.0, 42.0, 49.0]]
+        assert a.grad.tolist() == [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 28.0]
+        assert b.grad.tolist() == [[7, 7, 7, 7, 7, 7, 7]]
 
     def test_min(self):
         pass

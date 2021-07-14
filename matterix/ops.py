@@ -3,7 +3,7 @@ import numpy as np
 from .tensor import Tensor, enforceTensor, TensorableType
 from .utils import registerFn, underDevelopment
 
-# TODO: reshape, max, min
+# TODO: max, min
 
 # Support broadcasting issue in backwards
 def manageBroadcasting(
@@ -347,8 +347,19 @@ def sum(a: TensorableType, axis: int = None):
 
 
 @registerFn(Tensor, "max")
-def max() -> Tensor:
-    pass
+def max(x: Tensor) -> Tensor:
+    """Returns the maximum value of the input tensor."""
+    output = Tensor(np.max(x.data), requires_grad=x.requires_grad)
+
+    def backward_fn():
+
+        if x.requires_grad:
+            local_gradient = output.grad.data * (x.data == output.data)
+            x.grad.data += local_gradient
+
+    output.backward_fn = backward_fn
+
+    return output
 
 
 @registerFn(Tensor, "min")
@@ -425,7 +436,6 @@ def matmul(a: TensorableType, b: TensorableType) -> Tensor:
 
 @registerFn(Tensor, "matmul")
 def TensorMatMul(a: TensorableType, b: TensorableType) -> Tensor:
-
     return matmul(a, b)
 
 

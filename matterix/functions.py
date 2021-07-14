@@ -96,7 +96,6 @@ def log(x: TensorableType) -> Tensor:
     return x.log()
 
 
-@underDevelopment
 def logsoftmax(x: TensorableType) -> Tensor:
     """Apply log to the softmax output of a tensor"""
 
@@ -105,11 +104,10 @@ def logsoftmax(x: TensorableType) -> Tensor:
     ax = x.ndim - 1
     dim = x.shape[:-1] + (1,)
 
-    x_max = Tensor(x.data.max(axis=ax).reshape(dim), requires_grad=False)
-    exp_data = exp(x - x_max).sum(axis=ax)
-    logsumexp = log(exp_data)
+    x_max = x.max(axis=ax).reshape(dim)
+    exp_data = (x - x_max).exp().sum(axis=ax).log()
 
-    output = x - x_max - logsumexp
+    output = x - x_max - exp_data
 
     return output
 
