@@ -1,11 +1,12 @@
 from typing import List, Tuple, Union
 import numpy as np
+from numpy.core.numeric import outer
 
 ArrayableType = Union[float, list, np.ndarray]
 TensorableType = Union[float, np.ndarray, "Tensor"]
 
-# TODO: uniform, argmax, batching
-# TODO: Slice, transpose, reshape, resize
+# TODO: argmax
+# TODO: Slice, transpose, resize
 # BUG: Grad is retained when the data is changed manually
 
 
@@ -101,7 +102,7 @@ class Tensor:
                 "Tensors does not require grad. Enable requires_grad to compute gradients"
             )
 
-        if self.data.ndim != 0:
+        if self.data.size != 1:
             # Scalar values are basically 0-tensors
             if gradient is None:
                 raise ValueError(
