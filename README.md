@@ -2,9 +2,7 @@
     <img src="https://raw.githubusercontent.com/SiddeshSambasivam/MatterIx/master/assets/Logo.png?token=AKHFPP5DPO3RQLN3NBTHJGDA4DBL6" />
 </p>
 <p align="center">
-    <img alt="GitHub Pipenv locked Python version" src="https://img.shields.io/github/pipenv/locked/python-version/SiddeshSambasivam/MatterIx">
     <img alt="PyPI" src="https://img.shields.io/pypi/v/Matterix">
-    <img alt="GitHub Pipenv locked dependency version (branch)" src="https://img.shields.io/github/pipenv/locked/dependency-version/SiddeshSambasivam/MatterIx/black/master">
     <img alt="PyPI - License" src="https://img.shields.io/pypi/l/Matterix">
 </p>
 
