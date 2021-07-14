@@ -43,12 +43,12 @@ class TestTensorMatMul(unittest.TestCase):
     def test_matmul2(self):
 
         a = Tensor(np.arange(1, 9), requires_grad=True)
-        b = Tensor(np.arange(11, 19), requires_grad=True)
+        b = Tensor(np.arange(11, 19).reshape(8, 1), requires_grad=True)
 
         c = a @ b
         c.backward()
 
-        assert c.tolist() == 564
-
+        assert c.tolist() == [564.0]
+        print(b.grad.shape, b.shape)
         assert a.grad.tolist() == np.arange(11, 19).tolist()
-        assert b.grad.tolist() == np.arange(1, 9).tolist()
+        assert b.grad.tolist() == np.arange(1, 9).reshape(8, 1).tolist()

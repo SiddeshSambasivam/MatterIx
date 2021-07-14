@@ -29,7 +29,6 @@ def manageBroadcasting(
         return local_gradient
 
     drop_dim: int = local_gradient.ndim - input_ndim
-
     for _ in range(drop_dim):
         local_gradient = local_gradient.sum(axis=0)
 
@@ -37,6 +36,7 @@ def manageBroadcasting(
     # As we have already normalized the rank, we just sum over the dim while retaining dim
     # (2,3) + (1,3) => (2,3) :
     # (1,3) is broadcasted, so essentially we just have to sum over the _gradient along the dim which is equal to that of the child.
+
     for i, dim in enumerate(input_shape):
         if dim == 1:
             local_gradient = local_gradient.sum(axis=i, keepdims=True)
@@ -409,14 +409,14 @@ def matmul(a: TensorableType, b: TensorableType) -> Tensor:
             a_local_gradient = np.dot(output.grad.data, b.data.T)
             a_local_gradient = manageBroadcasting(a.ndim, a.shape, a_local_gradient)
 
-            a.grad.data += a_local_gradient
+            a.grad.data += a_local_gradient.reshape(a.grad.shape)
 
         if b.requires_grad:
 
             b_local_gradient = np.dot(a.data.T, output.grad.data)
             b_local_gradient = manageBroadcasting(b.ndim, b.shape, b_local_gradient)
 
-            b.grad.data += b_local_gradient
+            b.grad.data += b_local_gradient.reshape(b.grad.shape)
 
     output.backward_fn = backward_fn
 
