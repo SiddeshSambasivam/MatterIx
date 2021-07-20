@@ -3,7 +3,7 @@ import numpy as np
 from .tensor import Tensor, enforceTensor, TensorableType
 from .utils import registerFn, underDevelopment
 
-# TODO: min
+# TODO: implement min & mean, fix reshape
 # BUG: max function's axis is not handled properly
 
 # Support broadcasting issue in backwards
@@ -355,6 +355,7 @@ def max(x: Tensor, axis: int = None) -> Tensor:
     def backward_fn():
 
         if x.requires_grad:
+
             local_gradient = output.grad.data * (x.data == output.data)
             x.grad.data += local_gradient
 
@@ -364,17 +365,19 @@ def max(x: Tensor, axis: int = None) -> Tensor:
 
 
 @registerFn(Tensor, "min")
+@underDevelopment
 def min() -> Tensor:
-    pass
+    raise NotImplementedError
 
 
 @registerFn(Tensor, "mean")
 def mean() -> Tensor:
-    pass
+    raise NotImplementedError
 
 
 # Transform operators
 @registerFn(Tensor, "reshape")
+@underDevelopment
 def reshape(x, *shape) -> "Tensor":
 
     x_data = x.data.reshape(*shape)
@@ -452,7 +455,7 @@ def iadd(a: TensorableType, b: TensorableType) -> Tensor:
     a = enforceTensor(a)
     b = enforceTensor(b)
 
-    a.data = a.data + b.data
+    a._data = a._data + b._data
     return a
 
 
@@ -467,7 +470,7 @@ def isub(a: TensorableType, b: TensorableType) -> Tensor:
     a = enforceTensor(a)
     b = enforceTensor(b)
 
-    a.data = a.data - b.data
+    a._data = a._data - b._data
     a.grad = None
     return a
 
@@ -483,7 +486,7 @@ def imul(a: TensorableType, b: TensorableType) -> Tensor:
     a = enforceTensor(a)
     b = enforceTensor(b)
 
-    a.data = a.data * b.data
+    a._data = a._data * b._data
     a.grad = None
     return a
 

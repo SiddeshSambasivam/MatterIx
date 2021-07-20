@@ -106,8 +106,7 @@ def logsoftmax(x: TensorableType) -> Tensor:
 
     x_max = x.max(axis=ax).reshape(dim)
     exp_data = (x - x_max).exp().sum(axis=ax).log()
-
-    output = x - x_max - exp_data
+    output = x - x_max - exp_data.reshape(x.shape[0], 1)
 
     return output
 
