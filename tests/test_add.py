@@ -1,8 +1,7 @@
-from typing import Text
 import unittest
-from unittest.case import TestCase
-from matterix import Tensor, tensor
 import numpy as np
+from matterix.utils import InputError
+from matterix import Tensor
 
 
 class TestTensorAdd(unittest.TestCase):
@@ -59,5 +58,5 @@ class TestTensorAdd(unittest.TestCase):
             at = Tensor([1, 2, 3, 4])
             sum_t = 1 + at
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(InputError):
             _typeErrorFn()

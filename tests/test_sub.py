@@ -1,8 +1,6 @@
 import unittest
-
-from numpy.random import randint
-from matterix import Tensor
 import numpy as np
+from matterix import Tensor
 
 
 class TestTensorSub(unittest.TestCase):

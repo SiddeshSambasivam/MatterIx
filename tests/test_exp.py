@@ -14,6 +14,3 @@ class TestTensorExponents(unittest.TestCase):
 
         assert result.tolist() == (an ** 2).tolist()
         assert at.grad.tolist() == (2.0 * an).tolist()
-
-    # def test_simple_grad(self):
-    # pass

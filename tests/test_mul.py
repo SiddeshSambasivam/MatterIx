@@ -1,6 +1,5 @@
 import unittest
 from matterix import Tensor
-import numpy as np
 
 
 class TestTensorMul(unittest.TestCase):

@@ -1,5 +1,4 @@
 import unittest
-import numpy as np
 from matterix import Tensor
 import math
 
