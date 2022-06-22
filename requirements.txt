@@ -20,7 +20,7 @@ jeepney==0.6.0
 keyring==23.0.1
 mypy==0.910
 mypy-extensions==0.4.3
-numpy==1.20.3
+numpy==1.22.0
 packaging==20.9
 pandas==1.2.5
 pathspec==0.8.1
