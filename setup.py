@@ -23,7 +23,7 @@ setuptools.setup(
         "click==8.0.1",
         "iniconfig==1.1.1",
         "mypy-extensions==0.4.3",
-        "numpy==1.20.3",
+        "numpy==1.22.0",
         "packaging==20.9",
         "pathspec==0.8.1",
         "pluggy==0.13.1",
