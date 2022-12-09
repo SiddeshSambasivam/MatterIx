@@ -19,7 +19,7 @@ setuptools.setup(
         "appdirs==1.4.4",
         "attrs==21.2.0",
         "black==21.6b0",
-        "certifi==2021.5.30",
+        "certifi==2022.12.7",
         "click==8.0.1",
         "iniconfig==1.1.1",
         "mypy-extensions==0.4.3",
